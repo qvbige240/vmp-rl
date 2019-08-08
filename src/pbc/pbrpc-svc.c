@@ -25,7 +25,7 @@
 
 static int rpc_write_reply(pbrpc_svc *svc, PbcRpcResponse *rsphdr, unsigned char **buf);
 static int rpc_invoke_call(pbrpc_svc *svc, PbcRpcRequest *reqhdr, PbcRpcResponse *rsphdr);
-static PbcRpcRequest* rpc_read_req(pbrpc_svc *svc, const char *msg, uint64_t *bytes_read);
+static PbcRpcRequest* rpc_read_req(pbrpc_svc *svc, const unsigned char *msg, uint64_t *bytes_read);
 
 void generic_event_cb(struct bufferevent *bev, short events, void *ctx)
 {
@@ -40,8 +40,8 @@ void generic_event_cb(struct bufferevent *bev, short events, void *ctx)
 void generic_read_cb(struct bufferevent *bev, void *ctx)
 {
     struct pbrpc_xdr *xdr = ctx;
-    char *buf = NULL;
-    char *msg = NULL;
+    unsigned char *buf = NULL;
+    unsigned char *msg = NULL;
     struct evbuffer *in = NULL;
     size_t len = 0;
     size_t read = 0;
@@ -71,7 +71,7 @@ out:
     free(buf);
 }
 
-static int process_request(void *handle, struct bufferevent *bev, char *msg)
+static int process_request(void *handle, struct bufferevent *bev, unsigned char *msg)
 {
     uint64_t bytes_read = 0;
     struct pbrpc_xdr *xdr = handle;
@@ -320,7 +320,7 @@ static int rpc_invoke_call(pbrpc_svc *svc, PbcRpcRequest *reqhdr, PbcRpcResponse
     return ret;
 }
 
-static PbcRpcRequest* rpc_read_req(pbrpc_svc *svc, const char *msg, uint64_t *bytes_read)
+static PbcRpcRequest* rpc_read_req(pbrpc_svc *svc, const unsigned char *msg, uint64_t *bytes_read)
 {
     char *hdr;
     uint64_t proto_len = 0;

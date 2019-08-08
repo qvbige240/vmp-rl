@@ -31,7 +31,7 @@ typedef struct pbrpc_svc_callout
 /**
  * External data representation serialization routines.
  */
-typedef int (*pbrpc_xdrproc)(void *handle, struct bufferevent *bev, char *buf);
+typedef int (*pbrpc_xdrproc)(void *handle, struct bufferevent *bev, unsigned char *buf);
 
 struct pbrpc_xdr
 {
