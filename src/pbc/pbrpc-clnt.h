@@ -18,10 +18,10 @@
 
 struct pbrpc_clnt
 {
-    struct bufferevent *bev;
-    struct list_head outstanding;
-    struct pbrpc_xdr xdrs;
-    void *ctx;
+    struct bufferevent  *bev;
+    struct list_head    outstanding;
+    struct pbrpc_xdr    xdrs;
+    void                *ctx;
 };
 
 typedef struct pbrpc_clnt pbrpc_clnt;
@@ -29,17 +29,7 @@ typedef struct pbrpc_clnt pbrpc_clnt;
 /**
  * Rpcclnt callback
  */
-typedef int (*pbrpc_clnt_cbk)(pbrpc_clnt *clnt, ProtobufCBinaryData *res, int ret);
-
-/**
- * Rpc Pending call object
- */
-struct saved_req
-{
-    int32_t id;
-    pbrpc_clnt_cbk cbk;
-    struct list_head list;
-};
+typedef int (*pbrpc_clnt_reply)(pbrpc_clnt *clnt, ProtobufCBinaryData *res, int ret);
 
 /**
  *
@@ -55,7 +45,7 @@ struct saved_req
  * occurred
  *
  */
-pbrpc_clnt* pbrpc_clnt_new(const char *host, int16_t port);
+pbrpc_clnt* pbrpc_clnt_new(const char *host, uint16_t port);
 
 /**
  * Stops the libevent mainloop, destroys the bufferevent associated with @clnt
@@ -86,12 +76,12 @@ int pbrpc_clnt_mainloop(pbrpc_clnt *clnt);
  *
  * @param msg - protobuf-c encoded message containing RPC-specific payload
  *
- * @param cbk - callback called when the RPC call is responded to by RPC server
+ * @param replymsg - callback called when the RPC call is responded to by RPC server
  *
  * @return - 0 on success and -1 otherwise
  */
 int pbrpc_clnt_call(pbrpc_clnt *clnt, const char *method, ProtobufCBinaryData *msg,
-                    pbrpc_clnt_cbk cbk);
+                    pbrpc_clnt_reply replymsg);
 
 int rpc_write_request(pbrpc_clnt *clnt, PbcRpcRequest *reqhdr, char **buf);
 

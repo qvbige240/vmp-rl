@@ -14,6 +14,13 @@
 
 #include "pbrpc-clnt.h"
 
+typedef struct rpc_node
+{
+    int32_t id;
+    pbrpc_clnt_reply replymsg;
+    struct list_head list;
+} rpc_node_t;
+
 static PbcRpcResponse* rpc_read_rsp(const char *msg, uint64_t *bytes_read);
 
 static uint64_t next_id(void)
@@ -42,15 +49,13 @@ static int process_response(void *handle, struct bufferevent *bev, char *msg)
     clnt = list_entry(xdr, pbrpc_clnt, xdrs);
 
     rsp = rpc_read_rsp(msg, &bytes_read);
-    if (!rsp)
-    {
-        fprintf(stderr, "Failed to parse response "
-                        "from server\n");
+    if (!rsp) {
+        fprintf(stderr, "Failed to parse response from server\n");
         return bytes_read;
     }
 
-    struct saved_req *call, *tmp;
     char found = 0;
+    rpc_node_t *call, *tmp;
 
     list_for_each_entry_safe(call, tmp, &clnt->outstanding, list)
     {
@@ -68,7 +73,7 @@ static int process_response(void *handle, struct bufferevent *bev, char *msg)
         goto out;
     }
 
-    call->cbk(clnt, &rsp->result, 0);
+    call->replymsg(clnt, &rsp->result, 0);
     free(call);
 
 out:
@@ -93,33 +98,30 @@ int pbrpc_clnt_destroy(pbrpc_clnt *clnt)
     return 0;
 }
 
-pbrpc_clnt* pbrpc_clnt_new(const char *host, int16_t port)
+pbrpc_clnt* pbrpc_clnt_new(const char *host, uint16_t port)
 {
+    int ret;
     pbrpc_clnt *clnt = NULL;
     struct event_base *base;
-    int ret;
 
     clnt = calloc(1, sizeof(*clnt));
     if (!clnt)
         return NULL;
 
     base = event_base_new();
-    if (!base)
-    {
+    if (!base) {
         fprintf(stderr, "failed to create event base\n");
         goto err;
     }
 
     struct bufferevent *bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
-    if (!bev)
-    {
+    if (!bev) {
         fprintf(stderr, "failed to create bufferevent\n");
         goto err;
     }
     //FIXME: connect to @host supplied
-    ret = bufferevent_socket_connect_hostname(bev, NULL, AF_INET, "localhost", 9876);
-    if (ret)
-    {
+    ret = bufferevent_socket_connect_hostname(bev, NULL, AF_INET, host, port);
+    if (ret) {
         perror("connect failed");
         goto err;
     }
@@ -135,6 +137,9 @@ pbrpc_clnt* pbrpc_clnt_new(const char *host, int16_t port)
     clnt->xdrs.proc = process_response;
     return clnt;
 err:
+    if (clnt)
+        free(clnt);
+
     if (bev)
         bufferevent_free(bev);
 
@@ -155,7 +160,7 @@ int pbrpc_clnt_mainloop(pbrpc_clnt *clnt)
 }
 
 int pbrpc_clnt_call(pbrpc_clnt *clnt, const char *method,
-                    ProtobufCBinaryData *msg, pbrpc_clnt_cbk cbk)
+                    ProtobufCBinaryData *msg, pbrpc_clnt_reply replymsg)
 {
     PbcRpcRequest reqhdr = PBC_RPC_REQUEST__INIT;
     int ret = -1;
@@ -168,19 +173,20 @@ int pbrpc_clnt_call(pbrpc_clnt *clnt, const char *method,
         return -1;
 
     reqhdr.id = next_id();
+    reqhdr.method = mth;
     reqhdr.has_params = 1;
     reqhdr.params.data = msg->data;
     reqhdr.params.len = msg->len;
-    reqhdr.method = mth;
 
-    struct saved_req *entry = calloc(1, sizeof(*entry));
+    rpc_node_t *entry = calloc(1, sizeof(*entry));
     if (!entry) {
+        free(mth);
         return -1;
     }
 
     list_add_tail(&entry->list, &clnt->outstanding);
-    entry->id = reqhdr.id;
-    entry->cbk = cbk;
+    entry->id = reqhdr.id;      //...
+    entry->replymsg = replymsg;
 
     rlen = rpc_write_request(clnt, &reqhdr, &rbuf);
 

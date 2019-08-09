@@ -12,7 +12,7 @@
 #include <string.h>
 #include <errno.h>
 
-static int workload_exec(ProtobufCBinaryData *req, ProtobufCBinaryData *reply)
+int workload_exec(ProtobufCBinaryData *req, ProtobufCBinaryData *reply)
 {
     int ret = 0;
     size_t rsp_len;

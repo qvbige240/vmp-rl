@@ -5,10 +5,4 @@
  *
  */
 
-#include <stdio.h>
-
-int client_demo()
-{
-    printf("client demo\n");
-    return 0;
-}
+int client(void);
