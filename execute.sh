@@ -11,6 +11,7 @@ automake --add-missing
 # for protoc
 #export PKG_CONFIG_PATH=/home/zouqing/osource/network/pc/final_protobuf/lib/pkgconfig
 #../configure --prefix=/home/zouqing/work/carnet/linux/auto/vmp/vmp-rl/install --enable-zlog
+#export PATH=/home/zouqing/osource/network/pc/final_protobuf/bin:$PATH
 
 
 if false; then
