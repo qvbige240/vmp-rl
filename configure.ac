@@ -34,6 +34,13 @@ AC_CHECK_HEADERS([fcntl.h mntent.h stdlib.h string.h sys/ioctl.h sys/socket.h sy
 
 #srcdir="$( cd "$( dirname "${BASH_SOURCE[0]}"   )" && pwd   )"
 #AC_SUBST(project_dir)
+
+if test x$FINAL_PATH = x; then
+    AC_MSG_ERROR([
+*** dependency libraries env path missing: export \$FINAL_PATH=    ***
+    ])
+fi
+
 library_dir="$FINAL_PATH/lib"
 topsrcdir=$(top_srcdir)
 echo "srcdir: $srcdir"
@@ -183,9 +190,11 @@ if true; then
 fi
 
 
+LIBRL_LDFLAGS='$(top_builddir)/src/.libs'
 #EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall -g -O0 -DDEBUG -DUSE_TESTDEF"
 echo "EXTRA_CFLAGS: $EXTRA_CFLAGS"
 echo "CFLAGS: $CFLAGS"
+echo "EXTRA_LDFLAGS: $EXTRA_LDFLAGS"
 
 RL_CFLAGS="$BASE_CFLAGS"
 RL_LIBS="-lrl $BASE_LDFLAGS"

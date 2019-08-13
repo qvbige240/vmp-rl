@@ -12,7 +12,9 @@
 #LIBS=$(DYNAMIC_LIBS)
 
 
-LDADD = ../src/librl.la $(STATIC_LIBS) $(DYNAMIC_LIBS)
+LDADD = ../src/librl.la $(STATIC_LIBS) $(DYNAMIC_LIBS) 
+#AM_LDFLAGS = -L$(LIBRL_LDFLAGS)
+AM_LDFLAGS = -L$(top_builddir)/src/.libs
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include -I$(top_srcdir)/src
 
 noinst_PROGRAMS = rpc-client rpc-server time-test
@@ -27,4 +29,8 @@ if NMON
     nmon_SOURCES = lmon16f.c
     nmon_LDADD= $(LDADD) $(NMON_LIBS)
 endif
+
+verify:
+
+DISTCLEANFILES = *~
 
