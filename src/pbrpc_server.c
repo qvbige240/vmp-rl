@@ -86,13 +86,14 @@ extern int workload_exec (ProtobufCBinaryData *req, ProtobufCBinaryData *reply);
 
 int server(int argc, char **argv)
 {
-    struct event_base *base;
-    struct evconnlistener *listener;
-    struct sockaddr_in sin;
-    pbrpc_svc_callout tbl[] = {
+    //struct event_base *base;
+    //struct evconnlistener *listener;
+    //struct sockaddr_in sin;
+    pbrpc_svc_callout tbl[] = 
+    {
         //{ calculate, "Calculator.Calculate" },
         { 200000, 1, "Loader.workload", workload_exec },
-        NULL};
+    };
 
     int ret = -1;
     int port = 9876;

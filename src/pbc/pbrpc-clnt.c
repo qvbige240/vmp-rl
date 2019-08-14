@@ -21,7 +21,7 @@ typedef struct rpc_node
     struct list_head list;
 } rpc_node_t;
 
-static PbcRpcResponse* rpc_read_rsp(const char *msg, uint64_t *bytes_read);
+static PbcRpcResponse* rpc_read_rsp(const unsigned char *msg, uint64_t *bytes_read);
 
 static uint64_t next_id(void)
 {
@@ -39,7 +39,7 @@ static uint64_t next_id(void)
     return id;
 }
 
-static int process_response(void *handle, struct bufferevent *bev, char *msg)
+static int process_response(void *handle, struct bufferevent *bev, unsigned char *msg)
 {
     struct pbrpc_xdr *xdr = handle;
     pbrpc_clnt *clnt = NULL;
@@ -102,7 +102,8 @@ pbrpc_clnt* pbrpc_clnt_new(const char *host, uint16_t port)
 {
     int ret;
     pbrpc_clnt *clnt = NULL;
-    struct event_base *base;
+    struct bufferevent *bev = NULL;
+    struct event_base *base = NULL;
 
     clnt = calloc(1, sizeof(*clnt));
     if (!clnt)
@@ -114,7 +115,7 @@ pbrpc_clnt* pbrpc_clnt_new(const char *host, uint16_t port)
         goto err;
     }
 
-    struct bufferevent *bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
+    bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
     if (!bev) {
         fprintf(stderr, "failed to create bufferevent\n");
         goto err;
@@ -163,10 +164,9 @@ int pbrpc_clnt_call(pbrpc_clnt *clnt, const char *method,
                     ProtobufCBinaryData *msg, pbrpc_clnt_reply replymsg)
 {
     PbcRpcRequest reqhdr = PBC_RPC_REQUEST__INIT;
-    int ret = -1;
     size_t rlen = 0;
-    char *rbuf = NULL;
     char *mth = NULL;
+    unsigned char *rbuf = NULL;
 
     mth = strdup(method);
     if (!mth)
@@ -189,15 +189,15 @@ int pbrpc_clnt_call(pbrpc_clnt *clnt, const char *method,
     entry->replymsg = replymsg;
 
     rlen = rpc_write_request(clnt, &reqhdr, &rbuf);
+    rlen = rlen;
 
     free(mth);
     free(rbuf);
     return 0;
 }
 
-static PbcRpcResponse* rpc_read_rsp(const char *msg, uint64_t *bytes_read)
+static PbcRpcResponse* rpc_read_rsp(const unsigned char *msg, uint64_t *bytes_read)
 {
-    char *hdr;
     uint64_t proto_len = 0;
 
     memcpy(&proto_len, msg, sizeof(uint64_t));
@@ -207,7 +207,7 @@ static PbcRpcResponse* rpc_read_rsp(const char *msg, uint64_t *bytes_read)
     return pbc_rpc_response__unpack(NULL, proto_len, msg + sizeof(proto_len));
 }
 
-int rpc_write_request(pbrpc_clnt *clnt, PbcRpcRequest *reqhdr, char **buf)
+int rpc_write_request(pbrpc_clnt *clnt, PbcRpcRequest *reqhdr, unsigned char **buf)
 {
     uint64_t be_len = 0;
     if (!buf)

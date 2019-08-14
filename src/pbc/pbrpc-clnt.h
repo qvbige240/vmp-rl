@@ -83,6 +83,6 @@ int pbrpc_clnt_mainloop(pbrpc_clnt *clnt);
 int pbrpc_clnt_call(pbrpc_clnt *clnt, const char *method, ProtobufCBinaryData *msg,
                     pbrpc_clnt_reply replymsg);
 
-int rpc_write_request(pbrpc_clnt *clnt, PbcRpcRequest *reqhdr, char **buf);
+int rpc_write_request(pbrpc_clnt *clnt, PbcRpcRequest *reqhdr, unsigned char **buf);
 
 #endif //PBRPC_CLNT_H

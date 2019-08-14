@@ -111,7 +111,7 @@ enum bufferevent_filter_result filter_pbrpc_messages(struct evbuffer *src,
     size_t expected_len = 0;
     size_t tmp = 0;
     unsigned char *lenbuf = NULL;
-    struct bufferevent *bev = ctx;
+    //struct bufferevent *bev = ctx;
 
     /**
      * Read the message len evbuffer_pullup doesn't drain the buffer. It
@@ -322,7 +322,6 @@ static int rpc_invoke_call(pbrpc_svc *svc, PbcRpcRequest *reqhdr, PbcRpcResponse
 
 static PbcRpcRequest* rpc_read_req(pbrpc_svc *svc, const unsigned char *msg, uint64_t *bytes_read)
 {
-    char *hdr;
     uint64_t proto_len = 0;
 
     memcpy(&proto_len, msg, sizeof(uint64_t));

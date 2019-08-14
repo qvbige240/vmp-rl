@@ -41,6 +41,7 @@ if test x$FINAL_PATH = x; then
     ])
 fi
 
+LIB_PATH='${FINAL_PATH}/lib'
 library_dir="$FINAL_PATH/lib"
 topsrcdir=$(top_srcdir)
 echo "srcdir: $srcdir"
@@ -64,7 +65,8 @@ BUILD_CFLAGS="$CFLAGS $CPPFLAGS -DUSING_GENERATED_CONFIG_H"
 if test "x$global_CFLAGS" = x; then
     BUILD_CFLAGS=`echo $BUILD_CFLAGS | sed 's/-O2/-O3/'`
 fi
-EXTRA_CFLAGS="-Wall $INCLUDE $BASE_CFLAGS"
+EXTRA_CFLAGS="-Wall $BUILD_CFLAGS $INCLUDE $BASE_CFLAGS"
+BUILD_CFLAGS=
 #BUILD_LDFLAGS="$LDFLAGS"
 EXTRA_LDFLAGS="$BASE_LDFLAGS"
 
@@ -74,28 +76,36 @@ EXTRA_LDFLAGS="$BASE_LDFLAGS"
 #CFLAGS="$CFLAGS $EXTRA_CFLAGS"
 #LDFLAGS="$LDFLAGS $EXTRA_LDFLAGS"
 
-
 ## sqlite3 config
-if test x$enable_sqlite3 = xyes; then
-    AC_DEFINE(HAVE_SQLITE3, 1, [if sqlite3 is enabled])
-    
-	SQLITE3_LIB='libsqlite3.a'
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -DUSE_SQLITE3"
-else
-    SQLITE3_LIB=''
-fi
+CheckSqlite3()
+{
+    AC_ARG_ENABLE(sqlite3,
+        AS_HELP_STRING([--disable-sqlite3], [support sqlite3 [[default=no]]]),,
+        enable_sqlite3="no")
+    if test x$enable_sqlite3 = xyes; then
+        AC_DEFINE(HAVE_SQLITE3, 1, [ if sqlite3 is enabled ])
+        SQLITE3_CFLAGS="-DUSE_SQLITE3 "
+        SQLITE3_LIBS="$LIB_PATH/libsqlite3.a"
+        AC_SUBST(SQLITE3_CFLAGS)
+        AC_SUBST(SQLITE3_LIBS)
+    fi
+
+    AM_CONDITIONAL(HAVE_SQLITE3, [test "$enable_sqlite3" = "yes"])
+}
 
 ## zlog config
-AC_ARG_ENABLE(zlog,
-    AS_HELP_STRING([--enable-zlog], [support zlog [[default=yes]]]),,
-    enable_zlog="yes")
-if test x$enable_zlog = xyes; then    
-    AC_DEFINE(HAVE_ZLOG, 1, [if zlog is enabled])
-    EXTRA_CFLAGS="$EXTRA_CFLAGS -DUSE_ZLOG"
-    ZLOG_LIB='libzlog.a'
-else
-    ZLOG_LIB=''
-fi
+CheckZlog()
+{
+    AC_ARG_ENABLE(zlog,
+        AS_HELP_STRING([--enable-zlog], [support zlog [[default=yes]]]),,
+        enable_zlog="yes")
+    if test x$enable_zlog = xyes; then
+        AC_DEFINE(HAVE_ZLOG, 1, [ if zlog is enabled ])
+        BUILD_CFLAGS="$BUILD_CFLAGS -DUSE_ZLOG"
+        #ZLOG_LIBS="$LIB_PATH/libzlog.a"
+        STATIC_LIBS="$STATIC_LIBS $LIB_PATH/libzlog.a"
+    fi
+}
 
 ## examples config
 AC_ARG_ENABLE(examples,
@@ -112,8 +122,8 @@ CheckNmon()
     #if test x$enable_nmon = xyes -a x$enable_alsa = xyes; then
     if test x$enable_nmon = xyes; then
         AC_DEFINE(HAVE_NMON, 1, [ ])
-        NMON_CFLAGS="$EXTRA_CFLAGS -g -O3 -Wall -D JFS -DGETUSER -DLARGEMEM -D KERNEL_2_6_18 -D X86"
-        #NMON_CFLAGS+="$EXTRA_CFLAGS"
+        #NMON_CFLAGS="-g -O3 -Wall -D JFS -DGETUSER -DLARGEMEM -D KERNEL_2_6_18 -D X86"
+        NMON_CFLAGS="-D JFS -DGETUSER -DLARGEMEM -D KERNEL_2_6_18 -D X86"
         NMON_LIBS="-lncurses -lm"
         AC_SUBST(NMON_CFLAGS)
         AC_SUBST(NMON_LIBS)
@@ -156,50 +166,51 @@ CheckProtoc()
             ])
         fi
     fi
-
 }
 
+CheckZlog
 CheckNmon
 CheckProtoc
+CheckSqlite3
+echo "sqlite lib: $SQLITE3_LIBS"
 
 if true; then
     AC_DEFINE(X86_UBUNTU, 1, [ubuntu])
     PF_TARGET="X86_UBUNTU"
     echo "ubuntu compile"
 
-    LIB_PATH=$library_dir
 	LIBEVENT_LIB="$LIB_PATH/libevent.a $LIB_PATH/libevent_pthreads.a"
 	#NANOMSG_LIB="$LIB_PATH/libnanomsg.a"	
 	#JANSSON_LIB='$(top_srcdir)/depends/ubuntu/install/lib/libjansson.a'
 
     STATIC_LIBS="$STATIC_LIBS $LIBEVENT_LIB"
 
-    if test X"$SQLITE3_LIB" != X; then
-        STATIC_LIBS="$STATIC_LIBS $LIB_PATH/$SQLITE3_LIB"
-    fi
+    #if test X"$SQLITE3_LIB" != X; then
+    #    STATIC_LIBS="$STATIC_LIBS $LIB_PATH/$SQLITE3_LIB"
+    #fi
 
-    if test X"$ZLOG_LIB" != X; then
-        STATIC_LIBS="$STATIC_LIBS $LIB_PATH/$ZLOG_LIB"
-    fi
-
-    echo "STATIC_LIBS: $STATIC_LIBS"
-	AC_SUBST(STATIC_LIBS)
+    #if test X"$ZLOG_LIB" != X; then
+    #    STATIC_LIBS="$STATIC_LIBS $LIB_PATH/$ZLOG_LIB"
+    #fi
 	
 	DYNAMIC_LIBS="-lc"
-	AC_SUBST(DYNAMIC_LIBS)
 fi
 
-
-LIBRL_LDFLAGS='$(top_builddir)/src/.libs'
-#EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall -g -O0 -DDEBUG -DUSE_TESTDEF"
-echo "EXTRA_CFLAGS: $EXTRA_CFLAGS"
-echo "CFLAGS: $CFLAGS"
-echo "EXTRA_LDFLAGS: $EXTRA_LDFLAGS"
+echo "STATIC_LIBS: $STATIC_LIBS"
+AC_SUBST(STATIC_LIBS)
+AC_SUBST(DYNAMIC_LIBS)
 
 RL_CFLAGS="$BASE_CFLAGS"
 RL_LIBS="-lrl $BASE_LDFLAGS"
+RL_LDFLAGS='$(top_builddir)/src/.libs'
+
+EXTRA_CFLAGS="-fPIC $EXTRA_CFLAGS -DDEBUG $BUILD_CFLAGS ${GOLBAL_CFLAGS} "
+echo "EXTRA_CFLAGS: $EXTRA_CFLAGS"
+echo "LDFLAGS: $LDFLAGS"
+echo "EXTRA_LDFLAGS: $EXTRA_LDFLAGS"
+
 CPPFLAGS="$CPPFLAGS $EXTRA_CFLAGS"
-CFLAGS="$CFLAGS $EXTRA_CFLAGS"
+CFLAGS="$EXTRA_CFLAGS"
 LDFLAGS="$LDFLAGS $EXTRA_LDFLAGS"
 
 echo "CFLAGS: $CFLAGS"

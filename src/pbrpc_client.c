@@ -20,14 +20,13 @@
 
 #define DBUG(x) fprintf (stdout, "%s was called\n", # x)
 
-static void*
-mainloop (void *arg)
+void* mainloop(void *arg)
 {
-        pbrpc_clnt *clnt = arg;
+    pbrpc_clnt *clnt = arg;
 
-        pbrpc_clnt_mainloop (clnt);
+    pbrpc_clnt_mainloop(clnt);
 
-        return NULL;
+    return NULL;
 }
 
 #if 0
@@ -162,7 +161,7 @@ static void test_call_thread(void *args)
 
 int client(void)
 {
-    int ret;
+    //int ret;
     pbrpc_clnt *clnt = NULL;
 
     clnt = pbrpc_clnt_new("localhost", 9876);

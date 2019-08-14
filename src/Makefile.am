@@ -23,3 +23,4 @@ librl_la_SOURCES=\
 	$(pkg_include_HEADERS)
 
 librl_la_LDFLAGS = -version-info $(LIBRL_VERSION_INFO) $(LDFLAGS_NOUNDEFINED)
+
