@@ -5,6 +5,7 @@ pkginclude_HEADERS = \
 
 lib_LTLIBRARIES=librl.la
 
+librl_la_CFLAGS = -I$(top_srcdir)/src/support -I$(top_srcdir)/src/vmp
 librl_la_SOURCES=\
 	pbc/list.h \
 	pbc/pbrpc-clnt.c \
@@ -20,6 +21,14 @@ librl_la_SOURCES=\
 	service/workload-clnt.c \
 	service/workload.pb-c.c \
 	service/workload.pb-c.h \
+	support/globals.c \
+	support/globals.h \
+	support/mod_log.c \
+	support/mod_log.h \
+	vmp/vmp.h \
+	vmp/vmp_log.h \
+	vmp/vmp_thread.c \
+	vmp/vmp_thread.h \
 	$(pkg_include_HEADERS)
 
 librl_la_LDFLAGS = -version-info $(LIBRL_VERSION_INFO) $(LDFLAGS_NOUNDEFINED)

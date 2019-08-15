@@ -7,7 +7,10 @@ automake --add-missing
 #./configure --host=arm-hismall-linux
 #./configure --host=mipsel-24kec-linux-uclibc
 
-#export FINAL_PATH=/home/zouqing/work/carnet/linux/auto/vmp/premake/ubuntu/install
+export FINAL_PATH=/home/zouqing/work/carnet/linux/auto/vmp/premake/ubuntu/install
+ export GOLBAL_CFLAGS="-I/usr/include -I$FINAL_PATH/include"
+ export GOLBAL_CPPFLAGS="-I/usr/include -I$FINAL_PATH/include"
+ export GOLBAL_LDFLAGS="-L/usr/lib -L$FINAL_PATH/lib"
 # for protoc
 #export PKG_CONFIG_PATH=/home/zouqing/osource/network/pc/final_protobuf/lib/pkgconfig
 #../configure --prefix=/home/zouqing/work/carnet/linux/auto/vmp/vmp-rl/install --enable-zlog

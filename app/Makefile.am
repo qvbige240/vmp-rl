@@ -25,10 +25,14 @@ time_test_SOURCES = time-test.c
 
 if NMON
     noinst_PROGRAMS += nmon
-    nmon_CFLAGS = $(CFLAGS) $(NMON_CFLAGS)
+    nmon_CFLAGS = $(NMON_CFLAGS)
     nmon_SOURCES = lmon16f.c
     nmon_LDADD= $(LDADD) $(NMON_LIBS)
 endif
+
+    noinst_PROGRAMS += vmp-daemon
+    vmp_daemon_CFLAGS = -I$(top_srcdir)/src/support
+    vmp_daemon_SOURCES = vmp-daemon.c
 
 verify:
 
