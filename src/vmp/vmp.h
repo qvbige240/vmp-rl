@@ -8,6 +8,7 @@
 #define VMP_H
 
 #include "vpk/vpk.h"
+#include "vmp_typedef.h"
 #include "vmp_log.h"
 #include "vmp_thread.h"
 

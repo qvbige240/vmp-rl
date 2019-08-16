@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef MOD_LOG_H
-#define MOD_LOG_H
+#ifndef MODULE_LOG_H
+#define MODULE_LOG_H
 
 #include "vpk/vpk_typedef.h"
 
@@ -40,4 +40,4 @@ int mod_log_init(int procname, const char *conf);
 }
 #endif
 
-#endif //MOD_LOG_H
+#endif //MODULE_LOG_H

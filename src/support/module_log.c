@@ -11,7 +11,7 @@
 #include "vmp_log.h"
 
 #include "globals.h"
-#include "mod_log.h"
+#include "module_log.h"
 
 
 #define ZLOG_FILE_COUNT			5
@@ -169,7 +169,7 @@ static int mod_zlog_conf(log_config_t *config)
 	return 0;
 }
 
-static int load_log_conf(const char *conf, log_config_t *lc)
+static int mod_log_load(const char *conf, log_config_t *lc)
 {
     if (!conf)
     {
@@ -189,7 +189,7 @@ int mod_log_init(int procname, const char *conf)
 {
 #ifdef USE_ZLOG
 	log_config_t *config = calloc(1, sizeof(log_config_t));
-    load_log_conf(conf, config);
+    mod_log_load(conf, config);
     log_set_config(config);
 
 	//return tima_zlog_init(procname);

@@ -16,6 +16,12 @@ extern "C" {
 void* log_default_config(void);
 void log_set_config(void *config);
 
+void* global_default_config(void);
+void global_set_config(void *config);
+
+void* global_default_load(void);
+void global_set_load(void *load);
+
 #ifdef __cplusplus
 }
 #endif

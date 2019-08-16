@@ -7,6 +7,8 @@
 #ifndef VMP_LOG_H
 #define VMP_LOG_H
 
+#include "vmp_typedef.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
