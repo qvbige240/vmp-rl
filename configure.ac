@@ -63,7 +63,8 @@ BASE_LDFLAGS=""
 BUILD_CFLAGS="$CFLAGS $CPPFLAGS -DUSING_GENERATED_CONFIG_H"
 # The default optimization for RL is -O3
 if test "x$global_CFLAGS" = x; then
-    BUILD_CFLAGS=`echo $BUILD_CFLAGS | sed 's/-O2/-O3/'`
+#    BUILD_CFLAGS=`echo $BUILD_CFLAGS | sed 's/-O2/-O3/'`
+    BUILD_CFLAGS=`echo $BUILD_CFLAGS | sed 's/-O2/-O0/'`
 fi
 EXTRA_CFLAGS="-Wall $BUILD_CFLAGS $INCLUDE $BASE_CFLAGS"
 BUILD_CFLAGS=

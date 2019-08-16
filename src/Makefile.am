@@ -1,12 +1,16 @@
 
 pkginclude_HEADERS = \
+	load/load.h \
 	pbrpc_client.h \
 	pbrpc_server.h
 
 lib_LTLIBRARIES=librl.la
 
-librl_la_CFLAGS = -I$(top_srcdir)/src/support -I$(top_srcdir)/src/vmp
+librl_la_CFLAGS = -I$(top_srcdir)/src/vmp -I$(top_srcdir)/src/support
 librl_la_SOURCES=\
+	load/load_core.c \
+	load/load_core.h \
+	load/load_typedef.h \
 	pbc/list.h \
 	pbc/pbrpc-clnt.c \
 	pbc/pbrpc-clnt.h \
@@ -23,12 +27,16 @@ librl_la_SOURCES=\
 	service/workload.pb-c.h \
 	support/globals.c \
 	support/globals.h \
-	support/mod_log.c \
-	support/mod_log.h \
+	support/module_config.c \
+	support/module_config.h \
+	support/module_log.c \
+	support/module_log.h \
+	support/module_support.h \
 	vmp/vmp.h \
 	vmp/vmp_log.h \
 	vmp/vmp_thread.c \
 	vmp/vmp_thread.h \
+	vmp/vmp_typedef.h \
 	$(pkg_include_HEADERS)
 
 librl_la_LDFLAGS = -version-info $(LIBRL_VERSION_INFO) $(LDFLAGS_NOUNDEFINED)

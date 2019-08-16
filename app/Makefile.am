@@ -31,7 +31,7 @@ if NMON
 endif
 
     noinst_PROGRAMS += vmp-daemon
-    vmp_daemon_CFLAGS = -I$(top_srcdir)/src/support
+    vmp_daemon_CFLAGS = -I$(top_srcdir)/src/vmp -I$(top_srcdir)/src/support -I$(top_srcdir)/src/load
     vmp_daemon_SOURCES = vmp-daemon.c
 
 verify:
