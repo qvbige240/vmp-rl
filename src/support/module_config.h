@@ -15,7 +15,8 @@
 extern "C" {
 #endif
 
-#define DATA_DEFAULT_PATH   "/tmp/vmp"
+#define DATA_DEFAULT_PATH       "/tmp/vmp"
+#define BIN_DEFAULT_PATH        "./"
 
 typedef struct vmp_config_t
 {

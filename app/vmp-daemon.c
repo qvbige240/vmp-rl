@@ -22,38 +22,40 @@
 
 static void handler(int num)
 {
-	int status;
-	int pid = waitpid(-1, &status, WNOHANG);
-	VMP_LOGW("waitpid, ret = %d", pid);
+    int status;
+    int pid = waitpid(-1, &status, WNOHANG);
+    VMP_LOGW("waitpid, ret = %d", pid);
 
-	if (WIFEXITED(status)) {
-		VMP_LOGI("The child %d exit with code %d\n", pid, WEXITSTATUS(status));
-	}
-	signal(SIGCHLD, handler);
+    if (WIFEXITED(status)) {
+        VMP_LOGI("The child %d exit with code %d\n", pid, WEXITSTATUS(status));
+    }
+    signal(SIGCHLD, handler);
 }
 
 int main(int argc, char **argv)
 {
     int opt = 0;
 
-	//mod_log_init(PROCESS_DAEMON, NULL);
+    fprintf(stdout, "\n****************************** ******************************\n");
+    fprintf(stdout, "*             vmp-rl daemon starting...                     *\n");
+    fprintf(stdout, "*             version %s                                  *", SW_VERSION);
+    fprintf(stdout, "\n****************************** ******************************\n\n\n");
 
-	fprintf(stdout, "\n****************************** ******************************\n");
-	fprintf(stdout,   "*             vmp-rl daemon starting...                     *\n");
-	fprintf(stdout,   "*             version %s                                  *\n", SW_VERSION);
-	fprintf(stdout, "\n****************************** ******************************\n\n\n");
-
+    char *conf = NULL;
     char *type = NULL;
-	while ((opt = getopt(argc, argv, "hvlt:")) != -1)
-	{
-		switch (opt)
-		{
-		case 'h':
-			//help();
+    while ((opt = getopt(argc, argv, "hvclt:")) != -1)
+    {
+        switch (opt)
+        {
+        case 'h':
+            //help();
             return 0;
         case 'v':
             //version();
             return 0;
+        case 'c':
+            conf = optarg;
+            break;
         case 't':
             type = optarg;
             break;
@@ -62,9 +64,9 @@ int main(int argc, char **argv)
         default:
             break;
         }
-	}
+    }
     printf("type: %s\n", type);
-	signal(SIGCHLD, handler);
+    signal(SIGCHLD, handler);
 
     load_init(argc, argv);
 
@@ -74,7 +76,7 @@ int main(int argc, char **argv)
     //     server(1, argv);
     // else
     //     client();
-    
+
     load_done();
 
     return (0);

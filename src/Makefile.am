@@ -8,6 +8,8 @@ lib_LTLIBRARIES=librl.la
 
 librl_la_CFLAGS = -I$(top_srcdir)/src/vmp -I$(top_srcdir)/src/support
 librl_la_SOURCES=\
+	load/load_child.c \
+	load/load_child.h \
 	load/load_core.c \
 	load/load_core.h \
 	load/load_typedef.h \
@@ -34,6 +36,8 @@ librl_la_SOURCES=\
 	support/module_support.h \
 	vmp/vmp.h \
 	vmp/vmp_log.h \
+	vmp/vmp_process.c \
+	vmp/vmp_process.h \
 	vmp/vmp_thread.c \
 	vmp/vmp_thread.h \
 	vmp/vmp_typedef.h \

@@ -133,11 +133,13 @@ static int mod_zlog_conf(log_config_t *config)
 	fprintf(fp,"buffer min = 1024\n");
 	fprintf(fp,"buffer max = 2MB\n");
 	fprintf(fp,"rotate lock file = /tmp/zlog.lock\n");
-	fprintf(fp,"default format = \"%%d(%%F %%T) %%-6V (%%F:%%L) - %%m%%n\"\n");
+	//fprintf(fp,"rotate lock file = self\n");
+	fprintf(fp,"default format = \"%%d(%%F %%T) %%-6V (%%c:%%F:%%L) - %%m%%n\"\n");
 	fprintf(fp,"[formats]\n");
 	//fprintf(fp,"simple	= \"%%d (%%4p:%%15F:%%4L) %%-5V - %%m\"\n");
 	//fprintf(fp,"default	= \"%%d(%%F %%T) %%-6V - %%m%%n\"\n");
 	//fprintf(fp,"default	= \"%%d(%%F %%T) %%-6V (%%F:%%L) - %%m%%n\"\n");
+	//fprintf(fp,"normal	= \"%%d(%%F %%T.%%l) %%-6V (%%c:%%F:%%L) - %%m%%n\"\n");
 	fprintf(fp,"default	= \"%%d(%%F %%T).%%us %%-6V (%%F:%%L) - %%m%%n\"\n");
 	fprintf(fp,"[rules]\n");
 	if (mode & 0x01)
@@ -158,7 +160,7 @@ static int mod_zlog_conf(log_config_t *config)
 		printf("vpk_mkdir_mult \'%s\' ret = %d\n", log_path, ret);
 	}
 
-	int rc = dzlog_init(file, "vmp");
+	int rc = dzlog_init(file, "vmp-rl");
 	if (rc)	{
 		printf("zlog init failed\n");
 		return -1;

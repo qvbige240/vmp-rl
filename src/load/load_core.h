@@ -10,6 +10,8 @@
 
 #include "load_typedef.h"
 
+#include "load_child.h"
+
 VMP_BEGIN_DELS
 
 typedef struct rt_load_t
