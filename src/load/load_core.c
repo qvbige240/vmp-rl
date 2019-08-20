@@ -6,8 +6,8 @@
  */
 
 #include <unistd.h>
-#include <pthread.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #include "load.h"
 #include "load_core.h"
@@ -28,6 +28,7 @@ typedef struct _PrivInfo
 } PrivInfo;
 
 
+#if 0
 #include "pbrpc_server.h"
 #include "pbrpc_client.h"
 
@@ -42,6 +43,36 @@ static void load_core_test(PrivInfo* thiz)
         client();
     }
 }
+#else
+#include "rpc_svc.h"
+#include "rpc_clnt.h"
+
+static void load_core_test(PrivInfo* thiz)
+{
+    vmp_config_t* config = global_default_config();
+    if (config->server) {
+        VMP_LOGD("start rpc server...");
+        vmp_rpcsvc_t* svc = vmp_rpcsvc_create();
+        RpcsvcReq req = {0};
+        req.port = 9876;
+        vmp_rpcsvc_set(svc, &req);
+        vmp_rpcsvc_start(svc);
+        //vmp_rpcsvc_destroy(svc);
+    } else {
+        VMP_LOGD("start rpc client...");
+        vmp_rpclnt_t* clnt = vmp_rpclnt_create();
+        RpclntReq req = {0};
+        req.port = 9876;
+        strcpy(req.ip, "localhost");
+        vmp_rpclnt_set(clnt, &req);
+        vmp_rpclnt_start(clnt);
+        //vmp_rpclnt_destroy(clnt);
+
+        sleep(1);
+        rpc_workload_call(clnt);
+    }
+}
+#endif
 
 static void* load_core_thread(void* arg)
 {

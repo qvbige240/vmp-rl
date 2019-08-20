@@ -2,7 +2,9 @@
 pkginclude_HEADERS = \
 	load/load.h \
 	rpc/pbrpc_client.h \
-	rpc/pbrpc_server.h
+	rpc/pbrpc_server.h \
+	rpc/rpc_clnt.h \
+	rpc/rpc_svc.h
 
 lib_LTLIBRARIES=librl.la
 
@@ -24,6 +26,11 @@ librl_la_SOURCES=\
 	rpc/pbrpc_client.h \
 	rpc/pbrpc_server.c \
 	rpc/pbrpc_server.h \
+	rpc/rpc_clnt.c \
+	rpc/rpc_clnt.h \
+	rpc/rpc_svc.c \
+	rpc/rpc_svc.h \
+	rpc/rpc_typedef.h \
 	rpc/service/service-gather.h \
 	rpc/service/service-workload.c \
 	rpc/service/workload-clnt.c \
