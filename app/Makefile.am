@@ -15,7 +15,7 @@
 LDADD = ../src/librl.la $(STATIC_LIBS) $(DYNAMIC_LIBS) 
 #AM_LDFLAGS = -L$(LIBRL_LDFLAGS)
 AM_LDFLAGS = -L$(top_builddir)/src/.libs
-AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include -I$(top_srcdir)/src
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/include -I$(top_srcdir)/src -I$(top_srcdir)/src/rpc
 
 noinst_PROGRAMS = rpc-client rpc-server time-test
 

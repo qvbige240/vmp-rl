@@ -5,12 +5,12 @@
  *
  */
 
-#include "workload.pb-c.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+
+#include "workload.pb-c.h"
+#include "service-gather.h"
 
 int workload_exec(ProtobufCBinaryData *req, ProtobufCBinaryData *reply)
 {
