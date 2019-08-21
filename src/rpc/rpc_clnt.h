@@ -30,6 +30,8 @@ typedef struct vmp_rpclnt_t
     void*           core;
     void*           event_base;
 
+    void*           clnt;
+
     char            priv[ZERO_LEN_ARRAY];
 } vmp_rpclnt_t;
 
@@ -39,7 +41,6 @@ int vmp_rpclnt_start(vmp_rpclnt_t* thiz);
 int vmp_rpclnt_destroy(vmp_rpclnt_t* thiz);
 
 int rpc_workload_call(vmp_rpclnt_t* thiz);
-int rpc_registry_call(vmp_rpclnt_t* thiz);
 
 #ifdef __cplusplus
 }

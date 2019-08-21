@@ -10,6 +10,12 @@
 #include "pbc/pbrpc-clnt.h"
 #include "service/pbc-registry.pb-c.h"
 
+typedef struct _PrivInfo
+{
+    RpcServerInfoReq        req;
+
+    void                    *parent;
+} PrivInfo;
 
 static ProtobufCBinaryData registry_request_pack(PbcRegistryReq *req)
 {
@@ -41,20 +47,25 @@ static int registry_reply_cb(pbrpc_clnt *clnt, ProtobufCBinaryData *msg, int ret
     return 0;
 }
 
-int rpc_call_registry(void* clnt, RpcServerInfoReq *info)
+int rpc_call_registry(vmp_rpclnt_t *thiz, RpcServerInfoReq *info)
 {
     int ret;
+    PrivInfo *priv = calloc(1, sizeof(PrivInfo));
     PbcRegistryReq req = PBC_REGISTRY_REQ__INIT;
 
-    req.sid     = info->id;
-    req.name    = info->name;
-    req.system  = info->system;
+    priv->req       = *info;
+    priv->parent    = thiz;
+
+    req.sid         = info->id;
+    req.name        = info->name;
+    req.system      = info->system;
     req.location    = info->location;
     req.bandwidth   = info->bandwidth;
     req.ip          = info->ip;
     req.port        = info->port;
     ProtobufCBinaryData msg = registry_request_pack(&req);
-    ret = pbrpc_clnt_call(clnt, "Loader.registry", &msg, registry_reply_cb);
+
+    ret = pbrpc_clnt_call(thiz->clnt, "Loader.registry", &msg, registry_reply_cb);
     if (ret) {
         fprintf(stderr, "RPC call failed\n");
     }

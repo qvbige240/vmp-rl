@@ -47,6 +47,24 @@ static void load_core_test(PrivInfo* thiz)
 #include "rpc_svc.h"
 #include "rpc_clnt.h"
 
+#include "rpc_server_info.h"
+int load_registry_call(vmp_rpclnt_t* thiz)
+{
+    if (thiz && thiz->clnt)
+    {
+        RpcServerInfoReq req = {0};
+        req.id = 1;
+        req.name = "server1";
+        req.system = "ubuntu";
+        req.location = "chengdu";
+        req.bandwidth = 1000 * 1024 * 1024;
+        strcpy(req.ip, "localhost");
+        req.port = 9876;
+        return rpc_call_registry(thiz, &req);
+    }
+    return 0;
+}
+
 static void load_core_test(PrivInfo* thiz)
 {
     vmp_config_t* config = global_default_config();
@@ -70,7 +88,8 @@ static void load_core_test(PrivInfo* thiz)
 
         sleep(1);
         //rpc_workload_call(clnt);
-        rpc_registry_call(clnt);
+
+        load_registry_call(clnt);
     }
 }
 #endif

@@ -12,7 +12,11 @@
 #include <event2/bufferevent.h>
 #include <sys/queue.h>
 
-#include "list.h"
+#ifndef HAVE_VPK
+ #include "list.h"
+#else
+ #include "vpk/vpk_list.h"
+#endif
 #include "pbrpc-svc.h"
 #include "pbrpc.pb-c.h"
 

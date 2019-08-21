@@ -8,14 +8,26 @@
 #ifndef RPC_TYPEDEF_H
 #define RPC_TYPEDEF_H
 
-//#include "vmp.h"
-//#include "vmp_log.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define HAVE_VPK 1
 
 #ifndef HAVE_VPK
+
   #define ZERO_LEN_ARRAY	1
 
   #define DECL_PRIV(thiz, priv) PrivInfo* priv = thiz != NULL ? (PrivInfo*)thiz->priv : NULL
+
+  typedef int (*vmp_callback_func)(void* p, int msg, void* arg);
+
+#else
+
+  #include "vmp.h"
+
 #endif
+
 
 #if 0
 #define RPC_LOGD(format, args...) VMP_LOGD(format, ##args)

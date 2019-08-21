@@ -23,7 +23,7 @@ typedef struct _PrivInfo
 	pthread_t               thread;
     pthread_mutex_t         mutex;
 
-    pbrpc_clnt*             clnt;
+    //pbrpc_clnt*             clnt;
 } PrivInfo;
 
 vmp_rpclnt_t* vmp_rpclnt_create(void)
@@ -73,11 +73,11 @@ static int rpc_clnt_run(vmp_rpclnt_t* thiz)
         return -1;
     }
 
-    DECL_PRIV(thiz, priv);
+    //DECL_PRIV(thiz, priv);
     
     //pbrpc_clnt *clnt = priv->clnt;
     //event_base_dispatch(bufferevent_get_base(clnt->bev));
-    pbrpc_clnt_mainloop(priv->clnt);
+    pbrpc_clnt_mainloop(thiz->clnt);
 
     return 0;
 }
@@ -91,9 +91,9 @@ static void* rpc_clnt_thread(void* arg)
     if (priv->req.base)
         thiz->event_base = priv->req.base;
 
-    priv->clnt = pbrpc_clnt_new("localhost", 9876);
-    //priv->clnt = pbrpc_clnt_new(priv->req.ip, priv->req.port);
-    if (!priv->clnt) {
+    thiz->clnt = pbrpc_clnt_new("localhost", 9876);
+    //thiz->clnt = pbrpc_clnt_new(priv->req.ip, priv->req.port);
+    if (!thiz->clnt) {
         fprintf(stderr, "Failed to create an pbrpc_clnt object\n");
         goto err;
     }
@@ -152,8 +152,8 @@ int vmp_rpclnt_destroy(vmp_rpclnt_t* thiz)
     DECL_PRIV(thiz, priv);
     if (thiz)
     {
-        if (priv->clnt)
-            pbrpc_clnt_destroy(priv->clnt);
+        if (thiz->clnt)
+            pbrpc_clnt_destroy(thiz->clnt);
 
         rpc_clnt_stop(priv);
         free(thiz);
@@ -165,30 +165,10 @@ int vmp_rpclnt_destroy(vmp_rpclnt_t* thiz)
 extern int workload_call(pbrpc_clnt *clnt);
 int rpc_workload_call(vmp_rpclnt_t* thiz)
 {
-    DECL_PRIV(thiz, priv);
-    if (priv && priv->clnt)
+    //DECL_PRIV(thiz, priv);
+    if (thiz && thiz->clnt)
     {
-        return workload_call(priv->clnt);
-    }
-
-    return 0;
-}
-
-#include "rpc_server_info.h"
-int rpc_registry_call(vmp_rpclnt_t* thiz)
-{
-    DECL_PRIV(thiz, priv);
-    if (priv && priv->clnt)
-    {
-        RpcServerInfoReq req = {0};
-        req.id = 1;
-        req.name = "server1";
-        req.system = "ubuntu";
-        req.location = "chengdu";
-        req.bandwidth = 1000 * 1024 * 1024;
-        strcpy(req.ip, "localhost");
-        req.port = 9876;
-        return rpc_call_registry(priv->clnt, &req);
+        return workload_call(thiz->clnt);
     }
 
     return 0;

@@ -8,7 +8,8 @@
 #ifndef RPC_SERVERINFO_H
 #define RPC_SERVERINFO_H
 
-#include "rpc_typedef.h"
+//#include "rpc_typedef.h"
+#include "rpc_clnt.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,28 +17,28 @@ extern "C" {
 
 typedef struct _RpcServerInfoReq
 {
-	unsigned int            id;
-    char*                   name;
-    char*                   system;
-    char*                   location;
+    unsigned int            id;
+    char                    *name;
+    char                    *system;
+    char                    *location;
     unsigned long int       bandwidth;
 
     char                    ip[64];
-	unsigned short			port;
+    unsigned short          port;
 
-	void*					ctx;
+    void                    *ctx;
+    vmp_callback_func       pfn_callback;
 } RpcServerInfoReq;
 
 typedef struct _RpcServerInfoRsp
 {
-	unsigned int            id;
-    char*                   name;
-    char*                   ip;
+    unsigned int            id;
+    char                    *name;
+    char                    *ip;
     unsigned int            num;
 } RpcServerInfoRsp;
 
-int rpc_call_registry(void* clnt, RpcServerInfoReq *info);
-
+int rpc_call_registry(vmp_rpclnt_t *clnt, RpcServerInfoReq *info);
 
 #ifdef __cplusplus
 }
