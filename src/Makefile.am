@@ -28,10 +28,15 @@ librl_la_SOURCES=\
 	rpc/pbrpc_server.h \
 	rpc/rpc_clnt.c \
 	rpc/rpc_clnt.h \
+	rpc/rpc_server_info.c \
+	rpc/rpc_server_info.h \
 	rpc/rpc_svc.c \
 	rpc/rpc_svc.h \
 	rpc/rpc_typedef.h \
+	rpc/service/pbc-registry.pb-c.c \
+	rpc/service/pbc-registry.pb-c.h \
 	rpc/service/service-gather.h \
+	rpc/service/service-registry.c \
 	rpc/service/service-workload.c \
 	rpc/service/workload-clnt.c \
 	rpc/service/workload.pb-c.c \

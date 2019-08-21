@@ -69,7 +69,8 @@ static void load_core_test(PrivInfo* thiz)
         //vmp_rpclnt_destroy(clnt);
 
         sleep(1);
-        rpc_workload_call(clnt);
+        //rpc_workload_call(clnt);
+        rpc_registry_call(clnt);
     }
 }
 #endif
@@ -173,7 +174,7 @@ void load_init(int argc, char **argv)
 
     mod_log_init(PROCESS_DAEMON, NULL);
 
-    load_child_start(argc, argv);
+    //load_child_start(argc, argv);
 
     load_core_init();
 }

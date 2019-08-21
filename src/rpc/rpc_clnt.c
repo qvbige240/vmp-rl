@@ -173,3 +173,23 @@ int rpc_workload_call(vmp_rpclnt_t* thiz)
 
     return 0;
 }
+
+#include "rpc_server_info.h"
+int rpc_registry_call(vmp_rpclnt_t* thiz)
+{
+    DECL_PRIV(thiz, priv);
+    if (priv && priv->clnt)
+    {
+        RpcServerInfoReq req = {0};
+        req.id = 1;
+        req.name = "server1";
+        req.system = "ubuntu";
+        req.location = "chengdu";
+        req.bandwidth = 1000 * 1024 * 1024;
+        strcpy(req.ip, "localhost");
+        req.port = 9876;
+        return rpc_call_registry(priv->clnt, &req);
+    }
+
+    return 0;
+}

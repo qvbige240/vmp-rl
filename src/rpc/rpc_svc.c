@@ -33,6 +33,7 @@ typedef struct _PrivInfo
 static pbrpc_svc_callout method_table[] =
 {
     { 200000, 1, "Loader.workload", workload_exec },
+    { 200001, 1, "Loader.registry", registry_exec },
 };
 
 vmp_rpcsvc_t* vmp_rpcsvc_create(void)

@@ -16,6 +16,8 @@ extern "C" {
 
 int workload_exec(ProtobufCBinaryData *req, ProtobufCBinaryData *reply);
 
+int registry_exec(ProtobufCBinaryData *req, ProtobufCBinaryData *reply);
+
 
 #ifdef __cplusplus
 }

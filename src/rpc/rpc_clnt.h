@@ -39,6 +39,7 @@ int vmp_rpclnt_start(vmp_rpclnt_t* thiz);
 int vmp_rpclnt_destroy(vmp_rpclnt_t* thiz);
 
 int rpc_workload_call(vmp_rpclnt_t* thiz);
+int rpc_registry_call(vmp_rpclnt_t* thiz);
 
 #ifdef __cplusplus
 }
