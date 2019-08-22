@@ -12,6 +12,7 @@
 #include "vmp_log.h"
 #include "vmp_thread.h"
 #include "vmp_process.h"
+#include "vmp_shared.h"
 
 #ifdef __cplusplus
 extern "C" {
