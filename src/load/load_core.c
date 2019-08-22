@@ -25,6 +25,10 @@ typedef struct _PrivInfo
 	// audio_input_callback_t     input_cb;
 	// void                       *input_param;
 	// pthread_mutex_t            input_mutex;
+
+    void                    *process;
+    void                    *vmon;
+
 } PrivInfo;
 
 
@@ -111,16 +115,66 @@ static void load_core_test(PrivInfo* thiz)
 }
 #endif
 
+/** task vmon **/
+static int vmon_callback(void* p, int msg, void* arg)
+{
+    if (msg != 0) {
+        VMP_LOGE("vmon_callback failed");
+        return -1;
+    }
+    return 0;
+}
+static void task_vmon_start(PrivInfo* thiz)
+{
+    LoadVmonReq req = {0};
+    req.id              = 1;
+    req.ctx             = thiz;
+    req.pfn_callback    = vmon_callback;
+    thiz->vmon = load_vmon_create(thiz, &req);
+    if (thiz->vmon) {
+        load_vmon_start(thiz->vmon);
+    }
+}
+
+/** task process **/
+static int process_callback(void* p, int msg, void* arg)
+{
+    if (msg != 0) {
+        VMP_LOGE("process_callback failed");
+        return -1;
+    }
+    return 0;
+}
+static void task_process_start(PrivInfo* thiz)
+{
+    LoadChildReq req = {0};
+    req.ctx             = thiz;
+    req.pfn_callback    = process_callback;
+    thiz->process = load_child_create(thiz, &req);
+    if (thiz->process) {
+        load_child_start(thiz->process);
+    }
+}
+
 static void* load_core_thread(void* arg)
 {
     PrivInfo* thiz = (PrivInfo*)arg;
+
+    task_process_start(thiz);
+
+    task_vmon_start(thiz);
 
     load_core_test(thiz);
 
     while (thiz->cond)
     {
         sleep(5);
-    }    
+    }
+    
+    load_vmon_done(thiz->vmon);
+    thiz->vmon = NULL;
+    load_child_done(thiz->process);
+    thiz->process = NULL;
 
     return NULL;
 }
@@ -210,6 +264,7 @@ void load_init(int argc, char **argv)
 
     mod_log_init(PROCESS_DAEMON, NULL);
 
+    global_set_argv((void*)argv);
     //load_child_start(argc, argv);
 
     load_core_init();

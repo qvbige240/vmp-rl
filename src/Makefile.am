@@ -15,6 +15,8 @@ librl_la_SOURCES=\
 	load/load_core.c \
 	load/load_core.h \
 	load/load_typedef.h \
+	load/load_vmon.c \
+	load/load_vmon.h \
 	rpc/pbc/list.h \
 	rpc/pbc/pbrpc-clnt.c \
 	rpc/pbc/pbrpc-clnt.h \
