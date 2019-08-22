@@ -68,7 +68,7 @@ int calculate_call(pbrpc_clnt *clnt)
     do {
         fprintf(stdout, "call no %d\n", i);
         ProtobufCBinaryData msg = build_call_args(&calc, 1, i, i + 1);
-        ret = pbrpc_clnt_call(clnt, "Calculator.Calculate", &msg, calc_cbk);
+        ret = pbrpc_clnt_call(clnt, "Calculator.Calculate", &msg, calc_cbk, NULL);
         if (ret) {
             fprintf(stderr, "RPC call failed\n");
         }
@@ -121,7 +121,7 @@ int workload_call(pbrpc_clnt *clnt)
     PbcWorkloadReq req = PBC_WORKLOAD_REQ__INIT;
 
     ProtobufCBinaryData msg = build_workload_args(&req, 2);
-    ret = pbrpc_clnt_call(clnt, "Loader.workload", &msg, workload_cb);
+    ret = pbrpc_clnt_call(clnt, "Loader.workload", &msg, workload_cb, NULL);
     if (ret) {
         fprintf(stderr, "RPC call failed\n");
     }

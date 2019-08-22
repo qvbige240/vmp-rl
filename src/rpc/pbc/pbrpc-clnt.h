@@ -33,7 +33,7 @@ typedef struct pbrpc_clnt pbrpc_clnt;
 /**
  * Rpcclnt callback
  */
-typedef int (*pbrpc_clnt_reply)(pbrpc_clnt *clnt, ProtobufCBinaryData *res, int ret);
+typedef int (*pbrpc_clnt_reply)(void *ctx, ProtobufCBinaryData *res, int ret);
 
 /**
  *
@@ -85,7 +85,7 @@ int pbrpc_clnt_mainloop(pbrpc_clnt *clnt);
  * @return - 0 on success and -1 otherwise
  */
 int pbrpc_clnt_call(pbrpc_clnt *clnt, const char *method, ProtobufCBinaryData *msg,
-                    pbrpc_clnt_reply replymsg);
+                    pbrpc_clnt_reply replymsg, void *args);
 
 int rpc_write_request(pbrpc_clnt *clnt, PbcRpcRequest *reqhdr, unsigned char **buf);
 

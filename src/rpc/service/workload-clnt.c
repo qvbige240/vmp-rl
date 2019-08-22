@@ -15,7 +15,7 @@
 
 #define DBUG(x) fprintf (stdout, "%s was called\n", # x)
 
-static int workload_reply_cb(pbrpc_clnt *clnt, ProtobufCBinaryData *msg, int ret)
+static int workload_reply_cb(void *ctx, ProtobufCBinaryData *msg, int ret)
 {
     if (ret)
         return ret;
@@ -52,7 +52,7 @@ int workload_call(pbrpc_clnt *clnt)
     PbcWorkloadReq req = PBC_WORKLOAD_REQ__INIT;
 
     ProtobufCBinaryData msg = build_workload_args(&req, 2);
-    ret = pbrpc_clnt_call(clnt, "Loader.workload", &msg, workload_reply_cb);
+    ret = pbrpc_clnt_call(clnt, "Loader.workload", &msg, workload_reply_cb, NULL);
     if (ret) {
         fprintf(stderr, "RPC call failed\n");
     }

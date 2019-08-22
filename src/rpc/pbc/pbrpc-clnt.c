@@ -16,9 +16,11 @@
 
 typedef struct rpc_node
 {
-    int32_t id;
-    pbrpc_clnt_reply replymsg;
-    struct list_head list;
+    int32_t             id;
+    pbrpc_clnt_reply    replymsg;
+    void                *ctx;
+
+    struct list_head    list;
 } rpc_node_t;
 
 static PbcRpcResponse* rpc_read_rsp(const unsigned char *msg, uint64_t *bytes_read);
@@ -73,7 +75,7 @@ static int process_response(void *handle, struct bufferevent *bev, unsigned char
         goto out;
     }
 
-    call->replymsg(clnt, &rsp->result, 0);
+    call->replymsg(call->ctx, &rsp->result, 0);
     free(call);
 
 out:
@@ -161,7 +163,7 @@ int pbrpc_clnt_mainloop(pbrpc_clnt *clnt)
 }
 
 int pbrpc_clnt_call(pbrpc_clnt *clnt, const char *method,
-                    ProtobufCBinaryData *msg, pbrpc_clnt_reply replymsg)
+                    ProtobufCBinaryData *msg, pbrpc_clnt_reply replymsg, void *args)
 {
     PbcRpcRequest reqhdr = PBC_RPC_REQUEST__INIT;
     size_t rlen = 0;
@@ -185,8 +187,9 @@ int pbrpc_clnt_call(pbrpc_clnt *clnt, const char *method,
     }
 
     list_add_tail(&entry->list, &clnt->outstanding);
-    entry->id = reqhdr.id;      //...
+    entry->id       = reqhdr.id;      //...
     entry->replymsg = replymsg;
+    entry->ctx      = args;
 
     rlen = rpc_write_request(clnt, &reqhdr, &rbuf);
     rlen = rlen;

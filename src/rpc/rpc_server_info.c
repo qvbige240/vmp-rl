@@ -32,8 +32,9 @@ static ProtobufCBinaryData registry_request_pack(PbcRegistryReq *req)
     return pbc_req;
 }
 
-static int registry_reply_cb(pbrpc_clnt *clnt, ProtobufCBinaryData *msg, int ret)
+static int registry_reply_cb(void *ctx, ProtobufCBinaryData *msg, int ret)
 {
+    PrivInfo *priv = ctx;
     if (ret) return ret;
 
     PbcRegistryRsp *rsp = pbc_registry_rsp__unpack(NULL, msg->len, msg->data);
@@ -42,6 +43,17 @@ static int registry_reply_cb(pbrpc_clnt *clnt, ProtobufCBinaryData *msg, int ret
     printf("rsp->name = %s\n", rsp->name);
     printf("rsp->ip = %s\n", rsp->ip);
     printf("rsp->num = %d\n", rsp->num);
+    if (priv && priv->req.pfn_callback)
+    {
+        RpcServerInfoRsp info = {0};
+        info.id     = rsp->sid;
+        info.name   = rsp->name;
+        info.ip     = rsp->ip;
+        if (rsp->has_num)
+            info.num = rsp->num;
+        priv->req.pfn_callback(priv->req.ctx, 0, &info);
+        free(priv);
+    }
 
     pbc_registry_rsp__free_unpacked(rsp, NULL);
     return 0;
@@ -65,7 +77,7 @@ int rpc_call_registry(vmp_rpclnt_t *thiz, RpcServerInfoReq *info)
     req.port        = info->port;
     ProtobufCBinaryData msg = registry_request_pack(&req);
 
-    ret = pbrpc_clnt_call(thiz->clnt, "Loader.registry", &msg, registry_reply_cb);
+    ret = pbrpc_clnt_call(thiz->clnt, "Loader.registry", &msg, registry_reply_cb, priv);
     if (ret) {
         fprintf(stderr, "RPC call failed\n");
     }
