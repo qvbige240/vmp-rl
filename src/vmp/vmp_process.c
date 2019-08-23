@@ -16,10 +16,10 @@
 
 int kill_app(void)
 {
-    char cmd[64] = "killall -9 timapp";
+    char cmd[64] = "killall -9 vmp-sa";
     VMP_LOGW("%s", cmd);
     vpk_system_ex(cmd, 3);
-    VMP_LOGI("kill timapp end.");
+    VMP_LOGI("kill vmp-sa end.");
 
     return 0;
 }

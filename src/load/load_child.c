@@ -10,6 +10,12 @@
 #include <stdbool.h>
 
 #include "load_child.h"
+#include "ipcs/ipc_shared.h"
+
+struct load_shared
+{
+    volatile vmon_connection_t vmon;
+};
 
 typedef struct _PrivInfo
 {
@@ -19,13 +25,14 @@ typedef struct _PrivInfo
     LoadChildRsp        rsp;
 
     int                 cond;
-
     bool                initialized;
+
+    vmp_shmdev_t        ipcs;
+    struct load_shared  shared;
 
     pthread_t           thread;
     pthread_mutex_t     mutex;
 } PrivInfo;
-
 
 static void *load_child_thread(void *arg)
 {
@@ -34,16 +41,26 @@ static void *load_child_thread(void *arg)
 
     char** argv = global_default_argv();
 
-    VMP_LOGI("start vmp-sa");
-    pid = vmp_run_process(APP_VMP_SA, argv);
+    ipc_shared_init(&thiz->ipcs);
+
+    VMP_LOGI("start vmp-sa ======== %s", PATH_VMP_SA);
+    pid = vmp_run_process(PATH_VMP_SA, argv);
     VMP_LOGI("started vmp-sa, pid = %d", pid);
 
     while (thiz->cond)
     {
-        //VMP_LOGD("pid = %d", pid);
+        VMP_LOGI("start watch shared.");
+        ipc_shared_proc(&thiz->ipcs, &thiz->shared.vmon);
+
+        kill_app();
+
+        pid = vmp_run_process(PATH_VMP_SA, argv);
+        VMP_LOGI("restart app(pid=%d) end", pid);
+
         sleep(2);
     }
 
+    ipc_shared_done(&thiz->ipcs);
     VMP_LOGD("load_child_thread end");
 
     return NULL;

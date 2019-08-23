@@ -12,7 +12,8 @@
 
 VMP_BEGIN_DELS
 
-#define APP_VMP_SA      BIN_DEFAULT_PATH"vmp-sa"
+#define APP_VMP_SA      "vmp-sa"
+#define PATH_VMP_SA      BIN_DEFAULT_PATH""APP_VMP_SA
 
 typedef struct _LoadChildReq
 {

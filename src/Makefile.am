@@ -10,6 +10,8 @@ lib_LTLIBRARIES=librl.la
 
 librl_la_CFLAGS = -I$(top_srcdir)/src/vmp -I$(top_srcdir)/src/support -I$(top_srcdir)/src/rpc
 librl_la_SOURCES=\
+	ipcs/ipc_shared.c \
+	ipcs/ipc_shared.h \
 	load/load_child.c \
 	load/load_child.h \
 	load/load_core.c \
@@ -54,6 +56,8 @@ librl_la_SOURCES=\
 	vmp/vmp_log.h \
 	vmp/vmp_process.c \
 	vmp/vmp_process.h \
+	vmp/vmp_shared.c \
+	vmp/vmp_shared.h \
 	vmp/vmp_thread.c \
 	vmp/vmp_thread.h \
 	vmp/vmp_typedef.h \

@@ -14,6 +14,7 @@
 extern "C" {
 #endif
 
+int kill_app(void);
 int vmp_run_process(const char* cmd, char* argv[]);
 int vmp_waitpid(pid_t pid);
 
