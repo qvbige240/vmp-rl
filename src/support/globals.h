@@ -22,6 +22,9 @@ void global_set_config(void *config);
 void* global_default_load(void);
 void global_set_load(void *load);
 
+void* global_default_argv(void);
+void global_set_argv(void *argv);
+
 #ifdef __cplusplus
 }
 #endif

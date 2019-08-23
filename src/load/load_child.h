@@ -12,9 +12,26 @@
 
 VMP_BEGIN_DELS
 
-#define VMP_SA      BIN_DEFAULT_PATH"vmp-sa"
+#define APP_VMP_SA      BIN_DEFAULT_PATH"vmp-sa"
 
-int load_child_start(int argc, char *argv[]);
+typedef struct _LoadChildReq
+{
+    unsigned int            id;
+
+    void                    *ctx;
+    vmp_callback_func       pfn_callback;
+} LoadChildReq;
+
+typedef struct _LoadChildRsp
+{
+    unsigned int            num;
+} LoadChildRsp;
+
+void *load_child_create(void *parent, LoadChildReq *req);
+
+int load_child_start(void *p);
+
+void load_child_done(void *p);
 
 VMP_END_DELS
 
