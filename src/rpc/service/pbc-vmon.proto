@@ -1,0 +1,15 @@
+syntax = "proto2";
+
+package pbc;
+
+message VmonReq
+{
+  required uint32 id = 1;
+}
+
+message VmonRsp
+{
+  required uint32 id = 1;
+
+  required uint32 count = 2;
+}
