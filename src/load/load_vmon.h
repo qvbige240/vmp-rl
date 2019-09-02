@@ -16,6 +16,9 @@ typedef struct _LoadVmonReq
 {
     unsigned int            id;
 
+    void                    *svc;
+    void                    *process;
+
     void                    *ctx;
     vmp_callback_func       pfn_callback;
 } LoadVmonReq;

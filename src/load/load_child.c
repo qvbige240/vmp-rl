@@ -34,6 +34,18 @@ typedef struct _PrivInfo
     pthread_mutex_t     mutex;
 } PrivInfo;
 
+vmon_connection_t load_child_connection_get(void *p)
+{
+    vmon_connection_t c = {0};
+    PrivInfo *thiz = (PrivInfo *)p;
+    if (thiz == NULL) {
+        VMP_LOGE("null failed!");
+        return c;
+    }
+
+    return thiz->shared.vmon;
+}
+
 static void *load_child_thread(void *arg)
 {
     pid_t pid = 0;

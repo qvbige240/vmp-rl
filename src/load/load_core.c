@@ -11,6 +11,7 @@
 
 #include "load.h"
 #include "load_core.h"
+#include "rpc_svc.h"
 
 typedef struct _PrivInfo
 {
@@ -26,6 +27,7 @@ typedef struct _PrivInfo
 	// void                       *input_param;
 	// pthread_mutex_t            input_mutex;
 
+    vmp_rpcsvc_t            *svc;
     void                    *process;
     void                    *vmon;
 
@@ -48,8 +50,35 @@ static void load_core_test(PrivInfo* thiz)
     }
 }
 #else
-#include "rpc_svc.h"
+
 #include "rpc_clnt.h"
+
+#include "clnt_vmon.h"
+static int clnt_vmon_callback(void *p, int msg, void *arg)
+{
+    if (msg != 0) {
+        VMP_LOGE("clnt_vmon_callback failed");
+        return -1;
+    }
+    ClntVmonRsp *rsp = arg;
+    VMP_LOGD("vmon call response:");
+    VMP_LOGD(" id: %d", rsp->id);
+    VMP_LOGD(" count: %d", rsp->count);
+    return 0;
+}
+static int clnt_vmon_call(vmp_rpclnt_t *thiz)
+{
+    if (thiz && thiz->clnt)
+    {
+        ClntVmonReq req = {0};
+        req.id            = 1;
+
+        req.ctx           = thiz;
+        req.pfn_callback  = clnt_vmon_callback;
+        return rpc_clnt_vmon(thiz, &req);
+    }
+    return 0;
+}
 
 #include "rpc_server_info.h"
 static int registry_callback(void *p, int msg, void *arg)
@@ -92,6 +121,7 @@ static void load_core_test(PrivInfo* thiz)
     if (config->server) {
         VMP_LOGD("start rpc server...");
         vmp_rpcsvc_t* svc = vmp_rpcsvc_create();
+        thiz->svc = svc;
         RpcsvcReq req = {0};
         req.port = 9876;
         vmp_rpcsvc_set(svc, &req);
@@ -110,7 +140,10 @@ static void load_core_test(PrivInfo* thiz)
         sleep(1);
         //rpc_workload_call(clnt);
 
+
         load_registry_call(clnt);
+
+        clnt_vmon_call(clnt);
     }
 }
 #endif
@@ -128,6 +161,8 @@ static void task_vmon_start(PrivInfo* thiz)
 {
     LoadVmonReq req = {0};
     req.id              = 1;
+    req.svc             = thiz->svc;
+    req.process         = thiz->process;
     req.ctx             = thiz;
     req.pfn_callback    = vmon_callback;
     thiz->vmon = load_vmon_create(thiz, &req);
@@ -156,15 +191,44 @@ static void task_process_start(PrivInfo* thiz)
     }
 }
 
+/** rpc server **/
+static void rpc_server_start(PrivInfo* thiz)
+{
+    // vmp_config_t *config = global_default_config();
+    // if (config->server)
+    // {
+    // }
+
+    VMP_LOGD("start rpc server...");
+    thiz->svc = vmp_rpcsvc_create();
+    if (thiz->svc)
+    {
+        RpcsvcReq req = {0};
+        req.port = 9876;
+        vmp_rpcsvc_set(thiz->svc, &req);
+        vmp_rpcsvc_start(thiz->svc);
+    }
+}
+
 static void* load_core_thread(void* arg)
 {
     PrivInfo* thiz = (PrivInfo*)arg;
 
-    task_process_start(thiz);
+    vmp_config_t* config = global_default_config();
 
-    task_vmon_start(thiz);
+    if (config->server)
+    rpc_server_start(thiz);
 
-    load_core_test(thiz);
+    //task_process_start(thiz);
+    sleep(1);
+
+    if (thiz->svc)
+    {
+        task_vmon_start(thiz);
+    }
+
+    if (!config->server)
+        load_core_test(thiz);
 
     while (thiz->cond)
     {

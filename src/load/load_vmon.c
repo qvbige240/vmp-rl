@@ -9,7 +9,12 @@
 #include <pthread.h>
 #include <stdbool.h>
 
+#include "rpc_svc.h"
+#include "service-vmon.h"
+
 #include "load_vmon.h"
+#include "load_child.h"
+#include "ipcs/ipc_shared.h"
 
 typedef struct _PrivInfo
 {
@@ -31,11 +36,39 @@ static void load_vmon_test(PrivInfo *thiz)
     VMP_LOGD("load_vmon_test run test");
 }
 
+int sc_vmon_func(void *p, void *req, void *rsp)
+{
+    PrivInfo *thiz = p;
+    ServiceVmonReq *request = req;
+    ServiceVmonRsp *response = rsp;
+    VMP_LOGD("req id = %d\n", request->id);
+
+    vmon_connection_t c = load_child_connection_get(thiz->req.process);
+
+    response->num = c.number;
+
+    return 0;
+}
+
+static int load_vmon_register(PrivInfo *thiz)
+{
+    svc_handler_t *handler = calloc(1, sizeof(svc_handler_t));
+    handler->ctx            = thiz;
+    handler->pfn_callback   = sc_vmon_func;
+
+    vmp_rpcsvc_t *r = thiz->req.svc;
+    service_vmon_register(r->svc, handler);
+
+    return 0;
+}
+
 static void *load_vmon_thread(void *arg)
 {
     PrivInfo *thiz = (PrivInfo *)arg;
 
     load_vmon_test(thiz);
+
+    load_vmon_register(thiz);
 
     while (thiz->cond)
     {
