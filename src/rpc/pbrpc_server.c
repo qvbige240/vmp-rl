@@ -80,7 +80,7 @@ out:
     return ret;
 }
 #endif
-extern int workload_exec (ProtobufCBinaryData *req, ProtobufCBinaryData *reply);
+extern int workload_exec (void *handler, ProtobufCBinaryData *req, ProtobufCBinaryData *reply);
 
 #include "pbrpc_server.h"
 
@@ -92,7 +92,7 @@ int server(int argc, char **argv)
     pbrpc_svc_callout tbl[] = 
     {
         //{ calculate, "Calculator.Calculate" },
-        { 200000, 1, "Loader.workload", workload_exec },
+        { NULL, 200000, 1, "Loader.workload", NULL, workload_exec },
     };
 
     int ret = -1;

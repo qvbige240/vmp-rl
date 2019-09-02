@@ -17,6 +17,14 @@ typedef struct _PrivInfo
     void                    *parent;
 } PrivInfo;
 
+static void clnt_registry_delete(PrivInfo *thiz)
+{
+    if (thiz)
+    {
+        free(thiz);
+    }
+}
+
 static ProtobufCBinaryData registry_request_pack(PbcRegistryReq *req)
 {
     size_t clen;
@@ -35,9 +43,18 @@ static ProtobufCBinaryData registry_request_pack(PbcRegistryReq *req)
 static int registry_reply_cb(void *ctx, ProtobufCBinaryData *msg, int ret)
 {
     PrivInfo *priv = ctx;
-    if (ret) return ret;
+    if (ret) goto end;
 
     PbcRegistryRsp *rsp = pbc_registry_rsp__unpack(NULL, msg->len, msg->data);
+    if (!rsp) {
+        fprintf(stderr, "response null failed, msg len %d\n", msg->len);
+
+        if (priv && priv->req.pfn_callback)
+            priv->req.pfn_callback(priv->req.ctx, -1, NULL);
+
+        ret = -1;
+        goto end;
+    }
 
     printf("rsp->sid = %d\n", rsp->sid);
     printf("rsp->name = %s\n", rsp->name);
@@ -52,11 +69,12 @@ static int registry_reply_cb(void *ctx, ProtobufCBinaryData *msg, int ret)
         if (rsp->has_num)
             info.num = rsp->num;
         priv->req.pfn_callback(priv->req.ctx, 0, &info);
-        free(priv);
     }
 
     pbc_registry_rsp__free_unpacked(rsp, NULL);
-    return 0;
+end:
+    clnt_registry_delete(priv);
+    return ret;
 }
 
 int rpc_call_registry(vmp_rpclnt_t *thiz, RpcServerInfoReq *info)

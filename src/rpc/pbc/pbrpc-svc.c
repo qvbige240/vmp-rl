@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 
 #include <event2/buffer.h>
 #include <event2/listener.h>
@@ -217,6 +218,8 @@ pbrpc_svc* pbrpc_svc_new(const char *name, int16_t port)
     new->listener = listener;
     new->xdrs.proc = process_request;
 
+    //new->svc_lock = PTHREAD_RWLOCK_INITIALIZER;
+
     return new;
 err:
     free (new);
@@ -229,6 +232,80 @@ int pbrpc_svc_run(pbrpc_svc *svc)
     struct event_base *base = evconnlistener_get_base(listener);
 
     return event_base_dispatch(base);
+}
+
+/* svc_register */
+static pbrpc_svc_callout *pbrpc_svc_find(pbrpc_svc *svc, uint32_t prog, uint32_t vers,
+                                         pbrpc_svc_callout **prev, char *name)
+{
+    pbrpc_svc_callout *s, *p;
+
+    assert(svc != NULL);
+    assert(prev != NULL);
+
+    p = NULL;
+    for (s = svc->svc_head; s != NULL; s = s->sc_next)
+    {
+        if (((s->sc_prog == prog) && (s->sc_vers == vers)) &&
+            ((name == NULL) || (s->sc_name == NULL) ||
+             (strcmp(name, s->sc_name) == 0)))
+            break;
+        p = s;
+    }
+    *prev = p;
+    return (s);
+}
+
+int pbrpc_svc_register(pbrpc_svc *svc, uint32_t prog, uint32_t vers, char *name,
+                       pbrpc_svc_dispatch dispatch, void *args)
+{
+    pbrpc_svc_callout *prev, *s;
+
+    assert(svc != NULL);
+    assert(dispatch != NULL);
+
+    if ((s = pbrpc_svc_find(svc, prog, vers, &prev, name)) != NULL)
+    {
+        if (s->dispatch == dispatch)
+            return 0;
+        return (1);
+    }
+    s = calloc(1, sizeof(pbrpc_svc_callout));
+    if (s == NULL)
+    {
+        return (-1);
+    }
+    s->sc_prog      = prog;
+    s->sc_vers      = vers;
+    s->sc_name      = name;
+    s->sc_args      = args;
+    s->dispatch     = dispatch;
+    s->sc_next      = svc->svc_head;
+    svc->svc_head   = s;
+
+    return 0;
+}
+
+/*
+ * Remove a service program from the callout list.
+ */
+void pbrpc_svc_unregister(pbrpc_svc *svc, uint32_t prog, uint32_t vers, char *name)
+{
+    pbrpc_svc_callout *prev;
+    pbrpc_svc_callout *s;
+
+    if ((s = pbrpc_svc_find(svc, prog, vers, &prev, name)) == NULL)
+        return;
+    if (prev == NULL)
+    {
+        svc->svc_head = s->sc_next;
+    }
+    else
+    {
+        prev->sc_next = s->sc_next;
+    }
+    s->sc_next = NULL;
+    free(s);
 }
 
 /*
@@ -296,6 +373,7 @@ static int rpc_write_reply(pbrpc_svc *svc, PbcRpcResponse *rsphdr, unsigned char
     return rsplen + sizeof(uint64_t);
 }
 
+#if 0
 static int rpc_invoke_call(pbrpc_svc *svc, PbcRpcRequest *reqhdr, PbcRpcResponse *rsphdr)
 {
     int ret;
@@ -309,7 +387,7 @@ static int rpc_invoke_call(pbrpc_svc *svc, PbcRpcRequest *reqhdr, PbcRpcResponse
 
     pbrpc_svc_callout *method;
     for (method = svc->methods; method; method++)
-        if (!strcmp(method->name, reqhdr->method))
+        if (!strcmp(method->sc_name, reqhdr->method))
             break;
 
     if (!method)
@@ -319,6 +397,33 @@ static int rpc_invoke_call(pbrpc_svc *svc, PbcRpcRequest *reqhdr, PbcRpcResponse
 
     return ret;
 }
+#else
+static int rpc_invoke_call(pbrpc_svc *svc, PbcRpcRequest *reqhdr, PbcRpcResponse *rsphdr)
+{
+    int ret;
+
+    if (!reqhdr->has_params)
+    {
+        fprintf(stderr, "no params passed\n");
+        return -1;
+    }
+    rsphdr->id = reqhdr->id;
+
+    pbrpc_svc_callout *s;
+    for (s = svc->svc_head; s != NULL; s = s->sc_next)
+    {
+        if (strcmp(reqhdr->method, s->sc_name) == 0)
+            break;
+    }
+
+    if (!s)
+        return -1;
+
+    ret = s->dispatch(s->sc_args, &reqhdr->params, &rsphdr->result);
+
+    return ret;
+}
+#endif
 
 static PbcRpcRequest* rpc_read_req(pbrpc_svc *svc, const unsigned char *msg, uint64_t *bytes_read)
 {

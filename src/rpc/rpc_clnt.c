@@ -10,6 +10,8 @@
 #include <pthread.h>
 #include <stdbool.h>
 
+#include "event2/thread.h"
+
 #include "rpc_clnt.h"
 #include "pbc/pbrpc-clnt.h"
 

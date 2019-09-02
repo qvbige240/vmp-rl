@@ -27,6 +27,8 @@ typedef struct vmp_rpcsvc_t
     void*           core;
     void*           event_base;
 
+    void*           svc;
+
     char            priv[ZERO_LEN_ARRAY];
 } vmp_rpcsvc_t;
 

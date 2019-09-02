@@ -8,6 +8,7 @@
 #ifndef PBRPC_SVC_H
 #define PBRPC_SVC_H
 
+#include <pthread.h>
 #include <event2/event.h>
 #include <event2/bufferevent.h>
 
@@ -16,17 +17,19 @@
 /**
  * Rpcsvc method type
  */
-typedef int (*pbrpc_svc_dispatch)(ProtobufCBinaryData *req, ProtobufCBinaryData *rsp);
+typedef int (*pbrpc_svc_dispatch)(void *handler, ProtobufCBinaryData *req, ProtobufCBinaryData *rsp);
 
 /**
  * Rpcsvc method entry
  */
 typedef struct pbrpc_svc_callout
 {
-    uint32_t    sc_prog;
-    uint32_t    sc_vers;
-    char        *name;
-    pbrpc_svc_dispatch dispatch;
+    struct pbrpc_svc_callout    *sc_next;
+    uint32_t                    sc_prog;
+    uint32_t                    sc_vers;
+    char                        *sc_name;
+    void                        *sc_args;
+    pbrpc_svc_dispatch          dispatch;
 } pbrpc_svc_callout;
 
 /**
@@ -49,7 +52,11 @@ typedef struct pbrpc_svc
     struct pbrpc_xdr        xdrs;
     bufferevent_data_cb     reader;
     bufferevent_event_cb    notifier;
+
     pbrpc_svc_callout       *methods;
+
+    pbrpc_svc_callout       *svc_head;
+    pthread_rwlock_t	    svc_lock;
 } pbrpc_svc;
 
 /**
@@ -77,6 +84,10 @@ pbrpc_svc* pbrpc_svc_new(const char *hostname, int16_t port);
  *
  * */
 int pbrpc_svc_register_methods(pbrpc_svc *svc, pbrpc_svc_callout *methods);
+
+int pbrpc_svc_register(pbrpc_svc *svc, uint32_t prog, uint32_t vers, char *name,
+                       pbrpc_svc_dispatch dispatch, void *args);
+void pbrpc_svc_unregister(pbrpc_svc *svc, uint32_t prog, uint32_t vers, char *name);
 
 /**
  * Starts the event_base_loop (ref: libevent2) to listen for requests on @svc.

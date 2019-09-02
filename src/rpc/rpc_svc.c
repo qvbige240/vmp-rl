@@ -32,8 +32,8 @@ typedef struct _PrivInfo
 
 static pbrpc_svc_callout method_table[] =
 {
-    { 200000, 1, "Loader.workload", workload_exec },
-    { 200001, 1, "Loader.registry", registry_exec },
+    { NULL, 200000, 1, "Loader.workload", NULL, workload_exec },
+    { NULL, 200001, 1, "Loader.registry", NULL, registry_exec },
 };
 
 vmp_rpcsvc_t* vmp_rpcsvc_create(void)
@@ -113,6 +113,8 @@ static void* rpc_svc_thread(void* arg)
         goto err;
     }
 
+    thiz->svc = priv->svc;
+ 
     ret = pbrpc_svc_register_methods(priv->svc, method_table);
     if (ret) {
         fprintf(stderr, "Failed to register methods to pbrpc_svc.");
@@ -184,3 +186,15 @@ int vmp_rpcsvc_destroy(vmp_rpcsvc_t* thiz)
 
     return 0;
 }
+
+// int vmp_rpcsvc_register(vmp_rpcsvc_t* thiz, uint32_t prog, uint32_t vers, char *name,
+//                        int (*dispatch)(void *handler, void *req, void *rsp), void *args)
+// {
+//     DECL_PRIV(thiz, priv);
+//     if (thiz)
+//     {
+//         pbrpc_svc_register(priv->svc, prog, vers, name, dispatch, args);
+
+//     }
+//     return 0;
+// }
