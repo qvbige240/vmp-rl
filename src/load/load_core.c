@@ -41,12 +41,12 @@ typedef struct _PrivInfo
 static void load_core_test(PrivInfo* thiz)
 {
     vmp_config_t* config = global_default_config();
-    if (config->server) {
-        VMP_LOGD("start server...");
-        server(1, NULL);
-    } else {
+    if (config->client) {
         VMP_LOGD("start client...");
         client();
+    } else {
+        VMP_LOGD("start server...");
+        server(1, NULL);
     }
 }
 #else
@@ -118,16 +118,7 @@ int load_registry_call(vmp_rpclnt_t *thiz)
 static void load_core_test(PrivInfo* thiz)
 {
     vmp_config_t* config = global_default_config();
-    if (config->server) {
-        VMP_LOGD("start rpc server...");
-        vmp_rpcsvc_t* svc = vmp_rpcsvc_create();
-        thiz->svc = svc;
-        RpcsvcReq req = {0};
-        req.port = 9876;
-        vmp_rpcsvc_set(svc, &req);
-        vmp_rpcsvc_start(svc);
-        //vmp_rpcsvc_destroy(svc);
-    } else {
+    if (config->client) {
         VMP_LOGD("start rpc client...");
         vmp_rpclnt_t* clnt = vmp_rpclnt_create();
         RpclntReq req = {0};
@@ -140,10 +131,19 @@ static void load_core_test(PrivInfo* thiz)
         sleep(1);
         //rpc_workload_call(clnt);
 
-
         load_registry_call(clnt);
 
         clnt_vmon_call(clnt);
+    } else {
+
+        VMP_LOGD("start rpc server...");
+        vmp_rpcsvc_t* svc = vmp_rpcsvc_create();
+        thiz->svc = svc;
+        RpcsvcReq req = {0};
+        req.port = 9876;
+        vmp_rpcsvc_set(svc, &req);
+        vmp_rpcsvc_start(svc);
+        //vmp_rpcsvc_destroy(svc);
     }
 }
 #endif
@@ -194,11 +194,6 @@ static void task_process_start(PrivInfo* thiz)
 /** rpc server **/
 static void rpc_server_start(PrivInfo* thiz)
 {
-    // vmp_config_t *config = global_default_config();
-    // if (config->server)
-    // {
-    // }
-
     VMP_LOGD("start rpc server...");
     thiz->svc = vmp_rpcsvc_create();
     if (thiz->svc)
@@ -216,19 +211,22 @@ static void* load_core_thread(void* arg)
 
     vmp_config_t* config = global_default_config();
 
-    if (config->server)
+    if (config->client) {  // test
+        load_core_test(thiz);
+    } else
+
+{
     rpc_server_start(thiz);
 
-    //task_process_start(thiz);
+    task_process_start(thiz);
+
     sleep(1);
 
     if (thiz->svc)
     {
         task_vmon_start(thiz);
     }
-
-    if (!config->server)
-        load_core_test(thiz);
+}
 
     while (thiz->cond)
     {

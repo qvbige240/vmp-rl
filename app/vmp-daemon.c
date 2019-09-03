@@ -72,10 +72,10 @@ int main(int argc, char **argv)
 
     load_start();
 
-    // if (strcmp(type, "server") == 0)
-    //     server(1, argv);
-    // else
+    // if (strcmp(type, "client") == 0)
     //     client();
+    // else
+    //     server(1, argv);
 
     load_done();
 

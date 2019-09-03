@@ -40,12 +40,21 @@ static ProtobufCBinaryData registry_request_pack(PbcVmonReq *req)
     return pbc_req;
 }
 
-static int registry_reply_cb(void *ctx, ProtobufCBinaryData *msg, int ret)
+static int vmon_reply_cb(void *ctx, ProtobufCBinaryData *msg, int ret)
 {
     PrivInfo *priv = ctx;
-    if (ret) return ret;
+    if (ret) goto end;
 
     PbcVmonRsp *rsp = pbc_vmon_rsp__unpack(NULL, msg->len, msg->data);
+    if (!rsp) {
+        fprintf(stderr, "response null failed, msg len %d\n", msg->len);
+
+        if (priv && priv->req.pfn_callback)
+            priv->req.pfn_callback(priv->req.ctx, -1, NULL);
+
+        ret = -1;
+        goto end;
+    }
 
     printf("rsp->sid = %d\n", rsp->id);
     printf("rsp->count = %d\n", rsp->count);
@@ -55,12 +64,13 @@ static int registry_reply_cb(void *ctx, ProtobufCBinaryData *msg, int ret)
         info.id     = rsp->id;
         info.count   = rsp->count;
         priv->req.pfn_callback(priv->req.ctx, 0, &info);
-
-        clnt_vmon_delete(priv);
     }
 
     pbc_vmon_rsp__free_unpacked(rsp, NULL);
-    return 0;
+
+end:
+    clnt_vmon_delete(priv);
+    return ret;
 }
 
 int rpc_clnt_vmon(vmp_rpclnt_t *thiz, ClntVmonReq *info)
@@ -75,7 +85,7 @@ int rpc_clnt_vmon(vmp_rpclnt_t *thiz, ClntVmonReq *info)
     req.id          = info->id;
     ProtobufCBinaryData msg = registry_request_pack(&req);
 
-    ret = pbrpc_clnt_call(thiz->clnt, "Loader.vmon", &msg, registry_reply_cb, priv);
+    ret = pbrpc_clnt_call(thiz->clnt, "Loader.vmon", &msg, vmon_reply_cb, priv);
     if (ret) {
         fprintf(stderr, "RPC call failed\n");
     }

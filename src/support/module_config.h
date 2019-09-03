@@ -20,7 +20,7 @@ extern "C" {
 
 typedef struct vmp_config_t
 {
-    int         server; //test
+    int         client; //test
 
     void*       network;
 

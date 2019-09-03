@@ -15,7 +15,6 @@ vmp_config_t* vmp_config_create()
     vmp_config_t* thiz = calloc(1, sizeof(vmp_config_t));
     if (thiz != NULL)
     {
-        thiz->server = 0;
         strcpy(thiz->data_dir, DATA_DEFAULT_PATH);
     }
 
@@ -64,8 +63,8 @@ int vmp_config_init(vmp_config_t* thiz, int argc, char* argv[])
 	}
 
     printf("type: %s\n", type);
-    if (type && strcmp(type, "server") == 0)
-        thiz->server = 1;
+    if (type && strcmp(type, "client") == 0)
+        thiz->client = 1;
     
     if (conf)
         vmp_config_load(thiz, conf);
