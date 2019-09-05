@@ -14,6 +14,10 @@
 
 #include "pbrpc.pb-c.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Rpcsvc method type
  */
@@ -120,5 +124,9 @@ enum bufferevent_filter_result filter_pbrpc_messages(struct evbuffer *src,
 void generic_event_cb(struct bufferevent *bev, short events, void *ctx);
 
 void generic_read_cb(struct bufferevent *bev, void *ctx);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //PBRPC_SVC_H

@@ -65,6 +65,11 @@ int ipc_shared_proc(vmp_shmdev_t* shm, void* data);
 
 vmon_connection_t ipc_shared_vmon(vmp_shmdev_t* shm);
 
+/** child process **/
+int ipc_share_init(vmp_shmdev_t *shm);
+int ipc_watchdog_feed(vmp_shmdev_t *shm);
+int ipc_stream_conn(vmp_shmdev_t *shm, int op);
+
 #ifdef __cplusplus
 }
 #endif

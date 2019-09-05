@@ -20,6 +20,10 @@
 #include "pbrpc-svc.h"
 #include "pbrpc.pb-c.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct pbrpc_clnt
 {
     struct bufferevent  *bev;
@@ -88,5 +92,9 @@ int pbrpc_clnt_call(pbrpc_clnt *clnt, const char *method, ProtobufCBinaryData *m
                     pbrpc_clnt_reply replymsg, void *args);
 
 int rpc_write_request(pbrpc_clnt *clnt, PbcRpcRequest *reqhdr, unsigned char **buf);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //PBRPC_CLNT_H
