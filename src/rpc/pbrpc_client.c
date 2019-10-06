@@ -131,7 +131,8 @@ int workload_call(pbrpc_clnt *clnt)
 
 #include "pbrpc_client.h"
 
-extern int workload_call(pbrpc_clnt *clnt);
+//extern int workload_call(pbrpc_clnt *clnt);
+extern int demo_call(pbrpc_clnt *clnt);
 
 static void* test_clnt_call(void *args)
 {
@@ -143,7 +144,8 @@ static void* test_clnt_call(void *args)
 
     //sleep(1);
 
-    workload_call(clnt);
+    //workload_call(clnt);
+    demo_call(clnt);
 
     return NULL;
 }

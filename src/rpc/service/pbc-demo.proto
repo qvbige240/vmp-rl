@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+package pbc;
+
+message DemoReq
+{
+  required uint32 id = 1;
+}
+
+message DemoRsp
+{
+  required uint32 id = 1;
+
+  required uint32 video_cnt = 2;
+
+  required uint64 info_mem = 3;
+}

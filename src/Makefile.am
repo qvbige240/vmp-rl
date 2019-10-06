@@ -42,11 +42,14 @@ librl_la_SOURCES=\
 	rpc/service-typedef.h \
 	rpc/service-vmon.c \
 	rpc/service-vmon.h \
+    rpc/service/pbc-demo-clnt.c \
+    rpc/service/pbc-demo-service.c \
+    rpc/service/pbc-demo.pb-c.c \
+    rpc/service/pbc-demo.pb-c.h \
 	rpc/service/pbc-registry.pb-c.c \
 	rpc/service/pbc-registry.pb-c.h \
 	rpc/service/pbc-vmon.pb-c.c \
 	rpc/service/pbc-vmon.pb-c.h \
-	rpc/service/service-gather.h \
 	rpc/service/service-registry.c \
 	rpc/service/service-workload.c \
 	rpc/service/workload-clnt.c \
