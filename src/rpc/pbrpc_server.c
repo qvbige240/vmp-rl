@@ -80,7 +80,8 @@ out:
     return ret;
 }
 #endif
-extern int workload_exec (void *handler, ProtobufCBinaryData *req, ProtobufCBinaryData *reply);
+//extern int workload_exec (void *handler, ProtobufCBinaryData *req, ProtobufCBinaryData *reply);
+extern int demo_exec(void *handler, ProtobufCBinaryData *req, ProtobufCBinaryData *reply);
 
 #include "pbrpc_server.h"
 
@@ -92,7 +93,8 @@ int server(int argc, char **argv)
     pbrpc_svc_callout tbl[] = 
     {
         //{ calculate, "Calculator.Calculate" },
-        { NULL, 200000, 1, "Loader.workload", NULL, workload_exec },
+        //{ NULL, 200000, 1, "Loader.workload", NULL, workload_exec },
+        { NULL, 200000, 1, "Loader.demo", NULL, demo_exec },
     };
 
     int ret = -1;
@@ -113,7 +115,9 @@ int server(int argc, char **argv)
         return 1;
     }
 
-    ret = pbrpc_svc_register_methods(svc, tbl);
+    //ret = pbrpc_svc_register_methods(svc, tbl);
+    //ret = pbrpc_svc_register((pbrpc_svc*)svc, 200000, 1, "Loader.workload", workload_exec, NULL);
+    ret = pbrpc_svc_register((pbrpc_svc*)svc, 200000, 1, "Loader.demo", demo_exec, NULL);
     if (ret) {
         fprintf(stderr, "Failed to register methods to pbrpc_svc.");
         return 1;
