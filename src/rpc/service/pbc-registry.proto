@@ -8,15 +8,17 @@ message RegistryReq
   required string name = 2;
   required string system = 3;
   required string location = 4;
-  required uint64 bandwidth = 5;
-  required string ip = 6;
-  required uint32 port = 7;  
+  required string processor = 5;
+  required uint64 bandwidth = 6;
+  required uint64 memory = 7;
+  required string ip = 8;
+  required uint32 port = 9;
 }
 
 message RegistryRsp
 {
   required uint32 sid = 1;
   required string name = 2;
-  required string ip = 3;
+  required uint32 index = 3;
   optional uint32 num = 4;
 }

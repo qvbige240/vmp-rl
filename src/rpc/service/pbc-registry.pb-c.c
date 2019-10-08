@@ -97,7 +97,7 @@ void   pbc_registry_rsp__free_unpacked
   assert(message->base.descriptor == &pbc_registry_rsp__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-static const ProtobufCFieldDescriptor pbc_registry_req__field_descriptors[7] =
+static const ProtobufCFieldDescriptor pbc_registry_req__field_descriptors[9] =
 {
   {
     "sid",
@@ -148,8 +148,20 @@ static const ProtobufCFieldDescriptor pbc_registry_req__field_descriptors[7] =
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "bandwidth",
+    "processor",
     5,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_STRING,
+    0,   /* quantifier_offset */
+    offsetof(PbcRegistryReq, processor),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "bandwidth",
+    6,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_UINT64,
     0,   /* quantifier_offset */
@@ -160,8 +172,20 @@ static const ProtobufCFieldDescriptor pbc_registry_req__field_descriptors[7] =
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
+    "memory",
+    7,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_UINT64,
+    0,   /* quantifier_offset */
+    offsetof(PbcRegistryReq, memory),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
     "ip",
-    6,
+    8,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
@@ -173,7 +197,7 @@ static const ProtobufCFieldDescriptor pbc_registry_req__field_descriptors[7] =
   },
   {
     "port",
-    7,
+    9,
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_UINT32,
     0,   /* quantifier_offset */
@@ -185,18 +209,20 @@ static const ProtobufCFieldDescriptor pbc_registry_req__field_descriptors[7] =
   },
 };
 static const unsigned pbc_registry_req__field_indices_by_name[] = {
-  4,   /* field[4] = bandwidth */
-  5,   /* field[5] = ip */
+  5,   /* field[5] = bandwidth */
+  7,   /* field[7] = ip */
   3,   /* field[3] = location */
+  6,   /* field[6] = memory */
   1,   /* field[1] = name */
-  6,   /* field[6] = port */
+  8,   /* field[8] = port */
+  4,   /* field[4] = processor */
   0,   /* field[0] = sid */
   2,   /* field[2] = system */
 };
 static const ProtobufCIntRange pbc_registry_req__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 7 }
+  { 0, 9 }
 };
 const ProtobufCMessageDescriptor pbc_registry_req__descriptor =
 {
@@ -206,7 +232,7 @@ const ProtobufCMessageDescriptor pbc_registry_req__descriptor =
   "PbcRegistryReq",
   "pbc",
   sizeof(PbcRegistryReq),
-  7,
+  9,
   pbc_registry_req__field_descriptors,
   pbc_registry_req__field_indices_by_name,
   1,  pbc_registry_req__number_ranges,
@@ -240,12 +266,12 @@ static const ProtobufCFieldDescriptor pbc_registry_rsp__field_descriptors[4] =
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "ip",
+    "index",
     3,
     PROTOBUF_C_LABEL_REQUIRED,
-    PROTOBUF_C_TYPE_STRING,
+    PROTOBUF_C_TYPE_UINT32,
     0,   /* quantifier_offset */
-    offsetof(PbcRegistryRsp, ip),
+    offsetof(PbcRegistryRsp, index),
     NULL,
     NULL,
     0,             /* flags */
@@ -265,7 +291,7 @@ static const ProtobufCFieldDescriptor pbc_registry_rsp__field_descriptors[4] =
   },
 };
 static const unsigned pbc_registry_rsp__field_indices_by_name[] = {
-  2,   /* field[2] = ip */
+  2,   /* field[2] = index */
   1,   /* field[1] = name */
   3,   /* field[3] = num */
   0,   /* field[0] = sid */

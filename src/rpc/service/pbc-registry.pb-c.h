@@ -31,13 +31,15 @@ struct  _PbcRegistryReq
   char *name;
   char *system;
   char *location;
+  char *processor;
   uint64_t bandwidth;
+  uint64_t memory;
   char *ip;
   uint32_t port;
 };
 #define PBC_REGISTRY_REQ__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&pbc_registry_req__descriptor) \
-    , 0, NULL, NULL, NULL, 0, NULL, 0 }
+    , 0, NULL, NULL, NULL, NULL, 0, 0, NULL, 0 }
 
 
 struct  _PbcRegistryRsp
@@ -45,13 +47,13 @@ struct  _PbcRegistryRsp
   ProtobufCMessage base;
   uint32_t sid;
   char *name;
-  char *ip;
+  uint32_t index;
   protobuf_c_boolean has_num;
   uint32_t num;
 };
 #define PBC_REGISTRY_RSP__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&pbc_registry_rsp__descriptor) \
-    , 0, NULL, NULL, 0, 0 }
+    , 0, NULL, 0, 0, 0 }
 
 
 /* PbcRegistryReq methods */

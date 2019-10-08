@@ -109,18 +109,18 @@ static int clnt_vmon_call(vmp_rpclnt_t *thiz)
     return 0;
 }
 
-#include "rpc_server_info.h"
+#include "clnt_server_registry.h"
 static int registry_callback(void *p, int msg, void *arg)
 {
     if (msg != 0) {
         VMP_LOGE("registry_callback failed");
         return -1;
     }
-    RpcServerInfoRsp *rsp = arg;
+    ClntServerRegistryRsp *rsp = arg;
     VMP_LOGD("registry call response:");
     VMP_LOGD(" id: %d", rsp->id);
     VMP_LOGD(" name: %s", rsp->name);
-    VMP_LOGD(" ip: %s", rsp->ip);
+    VMP_LOGD(" index: %d", rsp->index);
     VMP_LOGD(" num: %d", rsp->num);
     return 0;
 }
@@ -128,18 +128,20 @@ int load_registry_call(vmp_rpclnt_t *thiz)
 {
     if (thiz && thiz->clnt)
     {
-        RpcServerInfoReq req = {0};
+        ClntServerRegistryReq req = {0};
         req.id            = 1;
         req.name          = "server1";
         req.system        = "ubuntu";
         req.location      = "chengdu";
+        req.processor     = "i7-5500U";
         req.bandwidth     = 1000 * 1024 * 1024;
+        req.memory        = (8UL) << 30;
         req.port          = 9876;
         strcpy(req.ip, "localhost");
 
         req.ctx           = thiz;
         req.pfn_callback  = registry_callback;
-        return rpc_call_registry(thiz, &req);
+        return rpc_clnt_registry(thiz, &req);
     }
     return 0;
 }

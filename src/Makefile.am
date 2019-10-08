@@ -34,12 +34,12 @@ librl_la_SOURCES=\
 	rpc/pbrpc_server.h \
     rpc/clnt_demo.c \
     rpc/clnt_demo.h \
+    rpc/clnt_server_registry.c \
+    rpc/clnt_server_registry.h \
 	rpc/clnt_vmon.c \
 	rpc/clnt_vmon.h \
 	rpc/rpc_clnt.c \
 	rpc/rpc_clnt.h \
-	rpc/rpc_server_info.c \
-	rpc/rpc_server_info.h \
 	rpc/rpc_svc.c \
 	rpc/rpc_svc.h \
 	rpc/rpc_typedef.h \
@@ -48,6 +48,8 @@ librl_la_SOURCES=\
     rpc/service-demo.h \
 	rpc/service-vmon.c \
 	rpc/service-vmon.h \
+    rpc/service-server-registry.c \
+    rpc/service-server-registry.h \
     rpc/service/pbc-demo-clnt.c \
     rpc/service/pbc-demo-service.c \
     rpc/service/pbc-demo.pb-c.c \
@@ -56,10 +58,6 @@ librl_la_SOURCES=\
 	rpc/service/pbc-registry.pb-c.h \
 	rpc/service/pbc-vmon.pb-c.c \
 	rpc/service/pbc-vmon.pb-c.h \
-	rpc/service/service-registry.c \
-	rpc/service/workload-clnt.c \
-	rpc/service/workload.pb-c.c \
-	rpc/service/workload.pb-c.h \
 	support/globals.c \
 	support/globals.h \
 	support/module_config.c \

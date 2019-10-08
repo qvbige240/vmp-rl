@@ -164,14 +164,14 @@ int vmp_rpclnt_destroy(vmp_rpclnt_t* thiz)
     return 0;
 }
 
-extern int workload_call(pbrpc_clnt *clnt);
-int rpc_workload_call(vmp_rpclnt_t* thiz)
-{
-    //DECL_PRIV(thiz, priv);
-    if (thiz && thiz->clnt)
-    {
-        return workload_call(thiz->clnt);
-    }
+// extern int workload_call(pbrpc_clnt *clnt);
+// int rpc_workload_call(vmp_rpclnt_t* thiz)
+// {
+//     //DECL_PRIV(thiz, priv);
+//     if (thiz && thiz->clnt)
+//     {
+//         return workload_call(thiz->clnt);
+//     }
 
-    return 0;
-}
+//     return 0;
+// }

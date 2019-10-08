@@ -5,16 +5,16 @@
  *
  */
 
-#include "rpc_server_info.h"
+#include "clnt_server_registry.h"
 
 #include "pbc/pbrpc-clnt.h"
 #include "service/pbc-registry.pb-c.h"
 
 typedef struct _PrivInfo
 {
-    RpcServerInfoReq        req;
+    ClntServerRegistryReq       req;
 
-    void                    *parent;
+    void                        *parent;
 } PrivInfo;
 
 static void clnt_registry_delete(PrivInfo *thiz)
@@ -46,7 +46,8 @@ static int registry_reply_cb(void *ctx, ProtobufCBinaryData *msg, int ret)
     if (ret) goto end;
 
     PbcRegistryRsp *rsp = pbc_registry_rsp__unpack(NULL, msg->len, msg->data);
-    if (!rsp) {
+    if (!rsp)
+    {
         fprintf(stderr, "response null failed, msg len %d\n", msg->len);
 
         if (priv && priv->req.pfn_callback)
@@ -58,14 +59,14 @@ static int registry_reply_cb(void *ctx, ProtobufCBinaryData *msg, int ret)
 
     printf("rsp->sid = %d\n", rsp->sid);
     printf("rsp->name = %s\n", rsp->name);
-    printf("rsp->ip = %s\n", rsp->ip);
+    printf("rsp->index = %d\n", rsp->index);
     printf("rsp->num = %d\n", rsp->num);
     if (priv && priv->req.pfn_callback)
     {
-        RpcServerInfoRsp info = {0};
+        ClntServerRegistryRsp info = {0};
         info.id     = rsp->sid;
         info.name   = rsp->name;
-        info.ip     = rsp->ip;
+        info.index  = rsp->index;
         if (rsp->has_num)
             info.num = rsp->num;
         priv->req.pfn_callback(priv->req.ctx, 0, &info);
@@ -77,26 +78,29 @@ end:
     return ret;
 }
 
-int rpc_call_registry(vmp_rpclnt_t *thiz, RpcServerInfoReq *info)
+int rpc_clnt_registry(vmp_rpclnt_t *thiz, ClntServerRegistryReq *info)
 {
     int ret;
     PrivInfo *priv = calloc(1, sizeof(PrivInfo));
     PbcRegistryReq req = PBC_REGISTRY_REQ__INIT;
 
-    priv->req       = *info;
-    priv->parent    = thiz;
+    priv->req         = *info;
+    priv->parent      = thiz;
 
-    req.sid         = info->id;
-    req.name        = info->name;
-    req.system      = info->system;
-    req.location    = info->location;
-    req.bandwidth   = info->bandwidth;
-    req.ip          = info->ip;
-    req.port        = info->port;
+    req.sid           = info->id;
+    req.name          = info->name;
+    req.system        = info->system;
+    req.location      = info->location;
+    req.processor     = info->processor;
+    req.bandwidth     = info->bandwidth;
+    req.memory        = info->memory;
+    req.ip            = info->ip;
+    req.port          = info->port;
     ProtobufCBinaryData msg = registry_request_pack(&req);
 
     ret = pbrpc_clnt_call(thiz->clnt, "Loader.registry", &msg, registry_reply_cb, priv);
-    if (ret) {
+    if (ret)
+    {
         fprintf(stderr, "RPC call failed\n");
     }
 

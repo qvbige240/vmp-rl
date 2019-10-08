@@ -5,43 +5,44 @@
  *
  */
 
-#ifndef RPC_SERVERINFO_H
-#define RPC_SERVERINFO_H
+#ifndef RPC_SERVER_REGISTRY_H
+#define RPC_SERVER_REGISTRY_H
 
-//#include "rpc_typedef.h"
 #include "rpc_clnt.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct _RpcServerInfoReq
+typedef struct _ClntServerRegistryReq
 {
     unsigned int            id;
     char                    *name;
     char                    *system;
     char                    *location;
-    unsigned long int       bandwidth;
+    char                    *processor;
+    unsigned long           bandwidth;
+    unsigned long           memory;
 
     char                    ip[64];
     unsigned short          port;
 
     void                    *ctx;
     vmp_callback_func       pfn_callback;
-} RpcServerInfoReq;
+} ClntServerRegistryReq;
 
-typedef struct _RpcServerInfoRsp
+typedef struct _ClntServerRegistryRsp
 {
     unsigned int            id;
     char                    *name;
-    char                    *ip;
+    unsigned int            index;
     unsigned int            num;
-} RpcServerInfoRsp;
+} ClntServerRegistryRsp;
 
-int rpc_call_registry(vmp_rpclnt_t *clnt, RpcServerInfoReq *info);
+int rpc_clnt_registry(vmp_rpclnt_t *clnt, ClntServerRegistryReq *info);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // RPC_SERVERINFO_H
+#endif // RPC_SERVER_REGISTRY_H

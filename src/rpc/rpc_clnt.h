@@ -40,8 +40,6 @@ int vmp_rpclnt_set(vmp_rpclnt_t* thiz, void* data);
 int vmp_rpclnt_start(vmp_rpclnt_t* thiz);
 int vmp_rpclnt_destroy(vmp_rpclnt_t* thiz);
 
-int rpc_workload_call(vmp_rpclnt_t* thiz);
-
 #ifdef __cplusplus
 }
 #endif
