@@ -57,7 +57,6 @@ librl_la_SOURCES=\
 	rpc/service/pbc-vmon.pb-c.c \
 	rpc/service/pbc-vmon.pb-c.h \
 	rpc/service/service-registry.c \
-	rpc/service/service-workload.c \
 	rpc/service/workload-clnt.c \
 	rpc/service/workload.pb-c.c \
 	rpc/service/workload.pb-c.h \

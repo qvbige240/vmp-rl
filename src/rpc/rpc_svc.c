@@ -12,8 +12,6 @@
 
 #include "rpc_svc.h"
 #include "pbc/pbrpc-svc.h"
-#include "service/service-gather.h"
-
 
 typedef struct _PrivInfo
 {
@@ -30,11 +28,11 @@ typedef struct _PrivInfo
     pbrpc_svc*              svc;
 } PrivInfo;
 
-static pbrpc_svc_callout method_table[] =
-{
-    { NULL, 200000, 1, "Loader.workload", NULL, workload_exec },
-    { NULL, 200001, 1, "Loader.registry", NULL, registry_exec },
-};
+// static pbrpc_svc_callout method_table[] =
+// {
+//     { NULL, 200000, 1, "Loader.workload", NULL, workload_exec },
+//     { NULL, 200001, 1, "Loader.registry", NULL, registry_exec },
+// };
 
 vmp_rpcsvc_t* vmp_rpcsvc_create(void)
 {
@@ -115,11 +113,11 @@ static void* rpc_svc_thread(void* arg)
 
     thiz->svc = priv->svc;
  
-    ret = pbrpc_svc_register_methods(priv->svc, method_table);
-    if (ret) {
-        fprintf(stderr, "Failed to register methods to pbrpc_svc.");
-        goto err;
-    }
+    // ret = pbrpc_svc_register_methods(priv->svc, method_table);
+    // if (ret) {
+    //     fprintf(stderr, "Failed to register methods to pbrpc_svc.");
+    //     goto err;
+    // }
 
     rpc_svc_run(thiz);    
 
