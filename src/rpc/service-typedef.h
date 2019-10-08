@@ -17,7 +17,8 @@ extern "C" {
 #endif
 
 #define RPC_SERVICE_PROGRAM         200000
-#define RPC_SERVICE_PROGRAM_VMON    200001
+#define RPC_SERVICE_PROGRAM_DEMO    200001
+#define RPC_SERVICE_PROGRAM_VMON    200002
 
 typedef int (*rpc_service_func)(void *p, void *req, void *rsp);
 

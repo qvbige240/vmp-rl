@@ -30,6 +30,7 @@ typedef struct _PrivInfo
     vmp_rpcsvc_t            *svc;
     void                    *process;
     void                    *vmon;
+    void                    *demo;
 
 } PrivInfo;
 
@@ -52,6 +53,34 @@ static void load_core_test(PrivInfo* thiz)
 #else
 
 #include "rpc_clnt.h"
+
+#include "clnt_demo.h"
+static int clnt_demo_callback(void *p, int msg, void *arg)
+{
+    if (msg != 0) {
+        VMP_LOGE("clnt_demo_callback failed");
+        return -1;
+    }
+    ClntDemoRsp *rsp = arg;
+    VMP_LOGD("demo call response:");
+    VMP_LOGD(" id: %d", rsp->id);
+    VMP_LOGD(" count: %d", rsp->count);
+    VMP_LOGD(" memory: %ld", rsp->memory);
+    return 0;
+}
+static int clnt_demo_call(vmp_rpclnt_t *thiz)
+{
+    if (thiz && thiz->clnt)
+    {
+        ClntDemoReq req = {0};
+        req.id            = 1;
+
+        req.ctx           = thiz;
+        req.pfn_callback  = clnt_demo_callback;
+        return rpc_clnt_demo(thiz, &req);
+    }
+    return 0;
+}
 
 #include "clnt_vmon.h"
 static int clnt_vmon_callback(void *p, int msg, void *arg)
@@ -133,6 +162,8 @@ static void load_core_test(PrivInfo* thiz)
 
         load_registry_call(clnt);
 
+        clnt_demo_call(clnt);
+
         clnt_vmon_call(clnt);
     } else {
 
@@ -148,6 +179,28 @@ static void load_core_test(PrivInfo* thiz)
 }
 #endif
 
+/** task demo **/
+static int demo_callback(void* p, int msg, void* arg)
+{
+    if (msg != 0) {
+        VMP_LOGE("demo_callback failed");
+        return -1;
+    }
+    return 0;
+}
+static void task_demo_start(PrivInfo* thiz)
+{
+    LoadDemoReq req = {0};
+    req.id              = 1;
+    req.svc             = thiz->svc;
+    req.process         = thiz->process;
+    req.ctx             = thiz;
+    req.pfn_callback    = demo_callback;
+    thiz->demo = load_demo_create(thiz, &req);
+    if (thiz->demo) {
+        load_demo_start(thiz->demo);
+    }
+}
 /** task vmon **/
 static int vmon_callback(void* p, int msg, void* arg)
 {
@@ -224,6 +277,7 @@ static void* load_core_thread(void* arg)
 
     if (thiz->svc)
     {
+        task_demo_start(thiz);
         task_vmon_start(thiz);
     }
 }
@@ -233,6 +287,8 @@ static void* load_core_thread(void* arg)
         sleep(5);
     }
     
+    load_demo_done(thiz->demo);
+    thiz->demo = NULL;
     load_vmon_done(thiz->vmon);
     thiz->vmon = NULL;
     load_child_done(thiz->process);

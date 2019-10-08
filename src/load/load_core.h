@@ -11,6 +11,7 @@
 #include "load_typedef.h"
 
 #include "load_child.h"
+#include "load_demo.h"
 #include "load_vmon.h"
 
 VMP_BEGIN_DELS

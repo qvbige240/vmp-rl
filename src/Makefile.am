@@ -16,6 +16,8 @@ librl_la_SOURCES=\
 	load/load_child.h \
 	load/load_core.c \
 	load/load_core.h \
+    load/load_demo.c \
+    load/load_demo.h \
 	load/load_typedef.h \
 	load/load_vmon.c \
 	load/load_vmon.h \
@@ -30,6 +32,8 @@ librl_la_SOURCES=\
 	rpc/pbrpc_client.h \
 	rpc/pbrpc_server.c \
 	rpc/pbrpc_server.h \
+    rpc/clnt_demo.c \
+    rpc/clnt_demo.h \
 	rpc/clnt_vmon.c \
 	rpc/clnt_vmon.h \
 	rpc/rpc_clnt.c \
@@ -40,6 +44,8 @@ librl_la_SOURCES=\
 	rpc/rpc_svc.h \
 	rpc/rpc_typedef.h \
 	rpc/service-typedef.h \
+    rpc/service-demo.c \
+    rpc/service-demo.h \
 	rpc/service-vmon.c \
 	rpc/service-vmon.h \
     rpc/service/pbc-demo-clnt.c \
