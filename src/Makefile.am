@@ -18,6 +18,8 @@ librl_la_SOURCES=\
     load/load_core.h \
     load/load_demo.c \
     load/load_demo.h \
+    load/load_node_state.c \
+    load/load_node_state.h \
     load/load_typedef.h \
     load/load_vmon.c \
     load/load_vmon.h \
@@ -34,6 +36,8 @@ librl_la_SOURCES=\
     rpc/pbrpc_server.h \
     rpc/clnt_demo.c \
     rpc/clnt_demo.h \
+    rpc/clnt_node_state.c \
+    rpc/clnt_node_state.h \
     rpc/clnt_server_registry.c \
     rpc/clnt_server_registry.h \
     rpc/clnt_vmon.c \
@@ -46,6 +50,8 @@ librl_la_SOURCES=\
     rpc/service-typedef.h \
     rpc/service-demo.c \
     rpc/service-demo.h \
+    rpc/service-node-state.c \
+    rpc/service-node-state.h \
     rpc/service-vmon.c \
     rpc/service-vmon.h \
     rpc/service-server-registry.c \
@@ -54,6 +60,8 @@ librl_la_SOURCES=\
     rpc/service/pbc-demo-service.c \
     rpc/service/pbc-demo.pb-c.c \
     rpc/service/pbc-demo.pb-c.h \
+    rpc/service/pbc-nstatus.pb-c.c \
+    rpc/service/pbc-nstatus.pb-c.h \
     rpc/service/pbc-registry.pb-c.c \
     rpc/service/pbc-registry.pb-c.h \
     rpc/service/pbc-vmon.pb-c.c \
