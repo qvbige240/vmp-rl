@@ -12,11 +12,14 @@
 #include <event2/bufferevent.h>
 #include <sys/queue.h>
 
-#ifndef HAVE_VPK
+#if defined(HAVE_VPK)
+ #include "vpk/vpk_list.h"
+#elif defined(HAVE_INTERNAL_DEFINE)
  #include "list.h"
 #else
- #include "vpk/vpk_list.h"
+ #include "vpk_list.h"
 #endif
+
 #include "pbrpc-svc.h"
 #include "pbrpc.pb-c.h"
 

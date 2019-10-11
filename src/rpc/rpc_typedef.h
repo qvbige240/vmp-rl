@@ -12,9 +12,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define HAVE_VPK 1
+//#define HAVE_VPK 1
 
-#ifndef HAVE_VPK
+#if defined(HAVE_VPK)
+
+  #include "vmp.h"
+
+#elif defined(HAVE_INTERNAL_DEFINE)
 
   #define ZERO_LEN_ARRAY	1
 
@@ -23,9 +27,7 @@
   typedef int (*vmp_callback_func)(void* p, int msg, void* arg);
 
 #else
-
   #include "vmp.h"
-
 #endif
 
 

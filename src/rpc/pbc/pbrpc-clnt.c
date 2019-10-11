@@ -59,7 +59,7 @@ static int process_response(void *handle, struct bufferevent *bev, unsigned char
     char found = 0;
     rpc_node_t *call, *tmp;
 
-    list_for_each_entry_safe(call, tmp, &clnt->outstanding, list)
+    list_for_each_entry_safe(call, tmp, &clnt->outstanding, rpc_node_t, list)
     {
         if (call->id == rsp->id)
         {
