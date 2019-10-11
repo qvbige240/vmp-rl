@@ -13,6 +13,7 @@
 #include "load_child.h"
 #include "load_demo.h"
 #include "load_vmon.h"
+#include "load_node_state.h"
 
 VMP_BEGIN_DELS
 

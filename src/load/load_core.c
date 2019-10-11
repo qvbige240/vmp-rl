@@ -31,6 +31,7 @@ typedef struct _PrivInfo
     void                    *process;
     void                    *vmon;
     void                    *demo;
+    void                    *node_state;
 
 } PrivInfo;
 
@@ -109,6 +110,39 @@ static int clnt_vmon_call(vmp_rpclnt_t *thiz)
     return 0;
 }
 
+#include "clnt_node_state.h"
+static int clnt_node_state_callback(void *p, int msg, void *arg)
+{
+    if (msg != 0) {
+        VMP_LOGE("clnt_node_state_callback failed");
+        return -1;
+    }
+    ClntNodeStateRsp *rsp = arg;
+    VMP_LOGD("node_state call response:");
+    VMP_LOGD(" id: %d", rsp->id);
+    VMP_LOGD(" index: %d", rsp->index);
+    VMP_LOGD(" name: %s", rsp->name);
+    VMP_LOGD(" count: %d", rsp->count);
+    VMP_LOGD(" uplink: %ld", rsp->uplink);
+    VMP_LOGD(" downlink: %ld", rsp->downlink);
+    VMP_LOGD(" memory: %ld", rsp->memory);
+    VMP_LOGD(" cpu: %lf", rsp->cpu);
+    return 0;
+}
+static int clnt_node_state_call(vmp_rpclnt_t *thiz)
+{
+    if (thiz && thiz->clnt)
+    {
+        ClntNodeStateReq req = {0};
+        req.id            = 1;
+
+        req.ctx           = thiz;
+        req.pfn_callback  = clnt_node_state_callback;
+        return rpc_clnt_node_state(thiz, &req);
+    }
+    return 0;
+}
+
 #include "clnt_server_registry.h"
 static int registry_callback(void *p, int msg, void *arg)
 {
@@ -167,6 +201,8 @@ static void load_core_test(PrivInfo* thiz)
         clnt_demo_call(clnt);
 
         clnt_vmon_call(clnt);
+
+        clnt_node_state_call(clnt);
     } else {
 
         VMP_LOGD("start rpc server...");
@@ -225,6 +261,28 @@ static void task_vmon_start(PrivInfo* thiz)
         load_vmon_start(thiz->vmon);
     }
 }
+/** task node state **/
+static int node_state_callback(void* p, int msg, void* arg)
+{
+    if (msg != 0) {
+        VMP_LOGE("node_state_callback failed");
+        return -1;
+    }
+    return 0;
+}
+static void task_node_state_start(PrivInfo* thiz)
+{
+    LoadNodeStateReq req = {0};
+    req.id              = 1;
+    req.svc             = thiz->svc;
+    req.process         = thiz->process;
+    req.ctx             = thiz;
+    req.pfn_callback    = node_state_callback;
+    thiz->node_state = load_node_state_create(thiz, &req);
+    if (thiz->node_state) {
+        load_node_state_start(thiz->node_state);
+    }
+}
 
 /** task process **/
 static int process_callback(void* p, int msg, void* arg)
@@ -281,6 +339,7 @@ static void* load_core_thread(void* arg)
     {
         task_demo_start(thiz);
         task_vmon_start(thiz);
+        task_node_state_start(thiz);
     }
 }
 
@@ -289,6 +348,8 @@ static void* load_core_thread(void* arg)
         sleep(5);
     }
     
+    load_node_state_done(thiz->node_state);
+    thiz->node_state = NULL;
     load_demo_done(thiz->demo);
     thiz->demo = NULL;
     load_vmon_done(thiz->vmon);
