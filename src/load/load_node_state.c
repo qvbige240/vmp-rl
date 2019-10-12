@@ -15,6 +15,7 @@
 #include "load_node_state.h"
 #include "load_child.h"
 #include "ipcs/ipc_shared.h"
+#include "load_system.h"
 
 typedef struct _PrivInfo
 {
@@ -22,6 +23,8 @@ typedef struct _PrivInfo
 
     LoadNodeStateReq    req;
     LoadNodeStateRsp    rsp;
+
+    void                *system;
 
     int                 cond;
 
@@ -139,6 +142,10 @@ void *load_node_state_create(void *parent, LoadNodeStateReq *req)
 
         priv->req           = *req;
         priv->parent        = parent;
+
+        priv->system        = load_system_create(NULL, NULL);
+        if (priv->system)
+        load_system_start(priv->system);
     }
 
     return priv;

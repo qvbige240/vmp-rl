@@ -20,6 +20,8 @@ librl_la_SOURCES=\
     load/load_demo.h \
     load/load_node_state.c \
     load/load_node_state.h \
+    load/load_system.c \
+    load/load_system.h \
     load/load_typedef.h \
     load/load_vmon.c \
     load/load_vmon.h \
