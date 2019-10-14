@@ -44,15 +44,15 @@ static int sc_node_state_func(void *p, void *req, void *rsp)
     PrivInfo *thiz = p;
     ServiceNodeStateReq *request = req;
     ServiceNodeStateRsp *response = rsp;
-    VMP_LOGD("req id = %d\n", request->id);
+    //VMP_LOGD("req id = %d\n", request->id);
 
     vmon_connection_t c = load_child_connection_get(thiz->req.process);
 
     response->index = 0;
     response->name = "server local";
     response->count = c.number;
-    response->uplink = 100;
-    response->downlink = 9;
+    response->uplink = ls_uplink_get(thiz->system);
+    response->downlink = ls_downlink_get(thiz->system);;
     response->memory = 1024;
     response->cpu = 50.15;
 

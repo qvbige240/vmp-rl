@@ -77,6 +77,8 @@ librl_la_SOURCES=\
     support/module_support.h \
     vmp/vmp.h \
     vmp/vmp_log.h \
+    vmp/vmp_nmon.c \
+    vmp/vmp_nmon.h \
     vmp/vmp_process.c \
     vmp/vmp_process.h \
     vmp/vmp_shared.c \
