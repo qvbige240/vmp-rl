@@ -22,7 +22,7 @@ typedef struct system_data {
     // struct nfs_stat nfs;
     struct net_stat ifnets[VMP_NETMAX];
     // struct timeval tv;
-    // double time;
+    double time;
     // struct procsinfo *procs;
 
     // int proc_records;
@@ -95,9 +95,27 @@ static void* system_interface_stat(void *ctx, void *data, int count)
 
 #if 1
 #define IFSTAT_PRINT    printf
-#else
-#define IFSTAT_PRINT
+#define IFSTAT_DEGUG
 #endif
+
+#define data_switcher()       \
+    do                        \
+    {                         \
+        static int which = 1; \
+                              \
+        if (which)            \
+        {                     \
+            p = &sys_data[0]; \
+            q = &sys_data[1]; \
+            which = 0;        \
+        }                     \
+        else                  \
+        {                     \
+            q = &sys_data[0]; \
+            p = &sys_data[1]; \
+            which = 1;        \
+        }                     \
+    } while (0)
 
 static void system_net_proc(PrivInfo *thiz)
 {
@@ -108,11 +126,15 @@ static void system_net_proc(PrivInfo *thiz)
     system_data_t *p = &sys_data[0];
     system_data_t *q = &sys_data[1];
 
-    double curr_time = current_time();
-    double prev_time = curr_time;
+    // double curr_time = current_time();
+    // double prev_time = curr_time;
+    p->time = current_time();
+    q->time = p->time;
 
     int networks = vmp_proc_net(0, system_interface_stat, p);
     memcpy(q->ifnets, p->ifnets, sizeof(struct net_stat) * networks);
+
+#ifdef IFSTAT_DEGUG
     for (i = 0; i < networks; i++)
     {
         IFSTAT_PRINT("%8s  %8s   ", (char *)&p->ifnets[i].if_name[0], " ");
@@ -122,6 +144,7 @@ static void system_net_proc(PrivInfo *thiz)
     for (i = 0; i < networks; i++)
         IFSTAT_PRINT(" KB/s in  KB/s out   ");
     IFSTAT_PRINT("\n");
+#endif //IFSTAT_DEGUG
 
 #define IFDELTA(member, elapsed) ((float)((q->ifnets[i].member > p->ifnets[i].member) ? 0 : (p->ifnets[i].member - q->ifnets[i].member) / elapsed))
 #define IFDELTA0(ifnets1, ifnets2, member, elapsed) ((float)((ifnets1.member > ifnets2.member) ? 0 : (ifnets2.member - ifnets1.member) / elapsed))
@@ -131,8 +154,12 @@ static void system_net_proc(PrivInfo *thiz)
 
     while (1)
     {
-        curr_time = current_time();
-        elapsed = curr_time - prev_time;
+        // curr_time = current_time();
+        // elapsed = curr_time - prev_time;
+        data_switcher();
+
+        p->time = current_time();
+        elapsed = p->time - q->time;
 
         networks = vmp_proc_net(0, system_interface_stat, p);
         //networks = vmp_proc_net_stat(p->ifnets, 0);
@@ -149,8 +176,8 @@ static void system_net_proc(PrivInfo *thiz)
         }
         IFSTAT_PRINT("\n");
 
-        memcpy(q->ifnets, p->ifnets, sizeof(struct net_stat) * networks);
-        prev_time = curr_time;
+        // memcpy(q->ifnets, p->ifnets, sizeof(struct net_stat) * networks);
+        // prev_time = curr_time;
 
         sleep(thiz->interval);
     }
