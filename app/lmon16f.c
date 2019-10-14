@@ -2310,21 +2310,26 @@ void strip_spaces(char *s)
     int spaced = 1;
 
     p = s;
-    for (p = s; *p != 0; p++) {
-	if (*p == ':')
-	    *p = ' ';
-	if (*p != ' ') {
-	    *s = *p;
-	    s++;
-	    spaced = 0;
-	} else if (spaced) {
-	    /* do no thing as this is second space */
-	} else {
-	    *s = *p;
-	    s++;
-	    spaced = 1;
-	}
-
+    for (p = s; *p != 0; p++)
+    {
+        if (*p == ':')
+            *p = ' ';
+        if (*p != ' ')
+        {
+            *s = *p;
+            s++;
+            spaced = 0;
+        }
+        else if (spaced)
+        {
+            /* do no thing as this is second space */
+        }
+        else
+        {
+            *s = *p;
+            s++;
+            spaced = 1;
+        }
     }
     *s = 0;
 }
@@ -3828,23 +3833,25 @@ void go_background(int def_loops, int def_secs)
 
 void proc_net()
 {
-    static FILE *fp = (FILE *) - 1;
+    static FILE *fp = (FILE *)-1;
     char buf[1024];
     int i = 0;
     int ret;
     unsigned long junk;
 
-    if (fp == (FILE *) - 1) {
-	if ((fp = fopen("/proc/net/dev", "r")) == NULL) {
-	    error("failed to open - /proc/net/dev");
-	    networks = 0;
-	    return;
-	}
+    if (fp == (FILE *)-1)
+    {
+        if ((fp = fopen("/proc/net/dev", "r")) == NULL)
+        {
+            error("failed to open - /proc/net/dev");
+            networks = 0;
+            return;
+        }
     }
     if (fgets(buf, 1024, fp) == NULL)
-	goto end;		/* throw away the header lines */
+        goto end; /* throw away the header lines */
     if (fgets(buf, 1024, fp) == NULL)
-	goto end;		/* throw away the header lines */
+        goto end; /* throw away the header lines */
 /*
 Inter-|   Receive                                                |  Transmit
  face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
@@ -3853,7 +3860,8 @@ Inter-|   Receive                                                |  Transmit
   sit0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
   eth1:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
 */
-    for (i = 0; i < NETMAX; i++) {
+    for (i = 0; i < NETMAX; i++)
+    {
 	if (fgets(buf, 1024, fp) == NULL)
 	    break;
 	strip_spaces(buf);
@@ -3873,12 +3881,14 @@ Inter-|   Receive                                                |  Transmit
 	    fprintf(stderr, "sscanf wanted 16 returned = %d line=%s\n",
 		    ret, (char *) buf);
     }
-  end:
-    if (reread) {
-	fclose(fp);
-	fp = (FILE *) - 1;
-    } else
-	rewind(fp);
+end:
+    if (reread)
+    {
+        fclose(fp);
+        fp = (FILE *)-1;
+    }
+    else
+        rewind(fp);
     networks = i;
 }
 
