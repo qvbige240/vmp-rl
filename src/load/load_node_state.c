@@ -54,7 +54,7 @@ static int sc_node_state_func(void *p, void *req, void *rsp)
     response->uplink = ls_uplink_get(thiz->system);
     response->downlink = ls_downlink_get(thiz->system);;
     response->memory = 1024;
-    response->cpu = 50.15;
+    response->cpu = ls_cpu_get(thiz->system);
 
     return 0;
 }

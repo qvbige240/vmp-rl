@@ -12,11 +12,16 @@
 
 #include "load_system.h"
 
+#define IFDELTA(member, elapsed) ((float)((q->ifnets[i].member > p->ifnets[i].member) ? 0 : (p->ifnets[i].member - q->ifnets[i].member) / elapsed))
+#define IFDELTA0(ifnets1, ifnets2, member, elapsed) ((float)((ifnets1.member > ifnets2.member) ? 0 : (ifnets2.member - ifnets1.member) / elapsed))
+
+#define RAW(member)      (long)((long)(p->cpuN[i].member)   - (long)(q->cpuN[i].member))
+#define RAWTOTAL(member) (long)((long)(p->cpu_total.member) - (long)(q->cpu_total.member))
 
 typedef struct system_data {
     // struct dsk_stat *dk;
-    // struct cpu_stat cpu_total;
-    // struct cpu_stat cpuN[CPUMAX];
+    struct cpu_stat cpu_total;
+    struct cpu_stat cpuN[VMP_CPUMAX];
     // struct mem_stat mem;
     // struct vm_stat vm;
     // struct nfs_stat nfs;
@@ -38,6 +43,8 @@ typedef struct _PrivInfo
 
     volatile double         uplink;
     volatile double         downlink;
+
+    volatile double         cpu_idle;
 
     int                     cond;
 
@@ -70,6 +77,13 @@ double ls_downlink_get(void *p)
 
     return thiz->downlink;
 }
+double ls_cpu_get(void *p)
+{
+    PrivInfo *thiz = p;
+    if (!thiz) return 0.0;
+
+    return 100.0 - thiz->cpu_idle;
+}
 
 static void load_system_test(PrivInfo *thiz)
 {
@@ -98,29 +112,40 @@ static void* system_interface_stat(void *ctx, void *data, int count)
 #define IFSTAT_DEGUG
 #endif
 
-#define data_switcher()       \
-    do                        \
-    {                         \
-        static int which = 1; \
-                              \
-        if (which)            \
-        {                     \
-            p = &sys_data[0]; \
-            q = &sys_data[1]; \
-            which = 0;        \
-        }                     \
-        else                  \
-        {                     \
-            q = &sys_data[0]; \
-            p = &sys_data[1]; \
-            which = 1;        \
-        }                     \
+#define data_switcher()                     \
+    do                                      \
+    {                                       \
+        static int which = 1;               \
+        if (which)                          \
+        {                                   \
+            p = &sys_data[0];               \
+            q = &sys_data[1];               \
+            which = 0;                      \
+        }                                   \
+        else                                \
+        {                                   \
+            q = &sys_data[0];               \
+            p = &sys_data[1];               \
+            which = 1;                      \
+        }                                   \
+        int i;                              \
+        for (i = 0; i < P_NUMBER; i++)      \
+        {                                   \
+            proc[i].read_this_interval = 0; \
+        }                                   \
     } while (0)
 
 static void system_net_proc(PrivInfo *thiz)
 {
     int i = 0;
     double elapsed; /* actual seconds between screen updates */
+
+    int cpu_idle;
+    int cpu_user;
+    int cpu_sys;
+    int cpu_wait;
+    int cpu_steal;
+    double cpu_sum;
 
     system_data_t sys_data[2];
     system_data_t *p = &sys_data[0];
@@ -131,6 +156,7 @@ static void system_net_proc(PrivInfo *thiz)
     p->time = current_time();
     q->time = p->time;
 
+    /* network */
     int networks = vmp_proc_net(0, system_interface_stat, p);
     memcpy(q->ifnets, p->ifnets, sizeof(struct net_stat) * networks);
 
@@ -146,11 +172,17 @@ static void system_net_proc(PrivInfo *thiz)
     IFSTAT_PRINT("\n");
 #endif //IFSTAT_DEGUG
 
-#define IFDELTA(member, elapsed) ((float)((q->ifnets[i].member > p->ifnets[i].member) ? 0 : (p->ifnets[i].member - q->ifnets[i].member) / elapsed))
-#define IFDELTA0(ifnets1, ifnets2, member, elapsed) ((float)((ifnets1.member > ifnets2.member) ? 0 : (ifnets2.member - ifnets1.member) / elapsed))
+    /* cpu utilization rate */
+    struct nmon_proc proc[P_NUMBER];
+    struct nmon_proc *info_cpu = &proc[P_STAT];
+    proc_init(proc);
+    int cpus = get_cpu_cnt(info_cpu);
+    proc_cpu(info_cpu, cpus, &p->cpu_total, (struct cpu_stat *)&p->cpuN);
+    memcpy((void *)&(q->cpu_total), (void *)&(p->cpu_total), sizeof(struct cpu_stat));
+    memcpy((void *)q->cpuN, (void *)p->cpuN, sizeof(struct cpu_stat) * cpus);
 
     thiz->interval = 1;
-    //sleep(1);
+    sleep(1);
 
     while (1)
     {
@@ -172,9 +204,32 @@ static void system_net_proc(PrivInfo *thiz)
             //printf("%8.2f", IFDELTA(if_ibytes, elapsed));
             thiz->uplink = IFDELTA(if_ibytes, elapsed) / 1024.0;
             thiz->downlink = IFDELTA(if_obytes, elapsed) / 1024.0;
-
         }
         IFSTAT_PRINT("\n");
+
+        /* cpu */
+        cpus = get_cpu_cnt(info_cpu);
+        proc_cpu(info_cpu, cpus, &p->cpu_total, (struct cpu_stat *)&p->cpuN);
+
+        cpu_user = RAWTOTAL(user) + RAWTOTAL(nice);
+        cpu_sys = RAWTOTAL(sys) + RAWTOTAL(irq) + RAWTOTAL(softirq);
+        /* + RAWTOTAL(guest) + RAWTOTAL(guest_nice); these are in addition to the 100% */
+        cpu_wait = RAWTOTAL(wait);
+        cpu_idle = RAWTOTAL(idle);
+        cpu_steal = RAWTOTAL(steal);
+        /* DEBUG inject steal       cpu_steal = cpu_sys; */
+        cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait + cpu_steal;
+
+        //IFSTAT_PRINT("cpu_sum %7.1f\n", cpu_sum);
+
+        IFSTAT_PRINT("%7.1f  %7.1f  %7.1f  %7.1f   %7.1f\n",
+                     (double)cpu_user / (double)cpu_sum * 100.0,
+                     (double)cpu_sys / (double)cpu_sum * 100.0,
+                     (double)cpu_wait / (double)cpu_sum * 100.0,
+                     (double)cpu_idle / (double)cpu_sum * 100.0,
+                     (double)cpu_steal / (double)cpu_sum * 100.0);
+
+        thiz->cpu_idle = (double)cpu_idle / (double)cpu_sum * 100.0;
 
         // memcpy(q->ifnets, p->ifnets, sizeof(struct net_stat) * networks);
         // prev_time = curr_time;

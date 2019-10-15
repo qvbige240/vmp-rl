@@ -12,6 +12,10 @@
 
 #include "vmp_nmon.h"
 
+#define MALLOC(argument)        malloc(argument)
+#define FREE(argument)          free(argument)
+#define REALLOC(argument1,argument2)    realloc(argument1,argument2)
+
 void strip_spaces(char *s)
 {
     char *p;
@@ -233,4 +237,354 @@ end:
         rewind(fp);
     networks = i;
     return networks;
+}
+
+/**  proc  **/
+int proc_cpu_done = 0;		/* Flag if we have run function proc_cpu() already in this interval */
+/* Counts of resources */
+// int cpus = 1;			/* number of CPUs in system (lets hope its more than zero!) */
+// int old_cpus = 1;		/* Number of CPU seen in previuos interval */
+
+void proc_init(struct nmon_proc *proc_info)
+{
+    proc_info[P_CPUINFO].filename = "/proc/cpuinfo";
+    proc_info[P_STAT].filename = "/proc/stat";
+    proc_info[P_VERSION].filename = "/proc/version";
+    proc_info[P_MEMINFO].filename = "/proc/meminfo";
+    proc_info[P_UPTIME].filename = "/proc/uptime";
+    proc_info[P_LOADAVG].filename = "/proc/loadavg";
+    proc_info[P_NFS].filename = "/proc/net/rpc/nfs";
+    proc_info[P_NFSD].filename = "/proc/net/rpc/nfsd";
+    proc_info[P_VMSTAT].filename = "/proc/vmstat";
+}
+
+void proc_read(struct nmon_proc *proc_info, int num, int reread)
+{
+    int i;
+    int size;
+    int found;
+    char buf[1024];
+
+    if (proc_info->read_this_interval == 1)
+        return;
+
+    if (proc_info->fp == 0)
+    {
+        if ((proc_info->fp = fopen(proc_info->filename, "r")) == NULL)
+        {
+            sprintf(buf, "failed to open file %s", proc_info->filename);
+            perror(buf);
+            proc_info->fp = 0;
+            return;
+        }
+    }
+    rewind(proc_info->fp);
+
+    /* We re-read P_STAT, now flag proc_cpu() that it has to re-process that data */
+    if (num == P_STAT)
+        proc_cpu_done = 0;
+
+    if (proc_info->size == 0)
+    {
+        /* first time so allocate  initial now */
+        proc_info->buf = MALLOC(512);
+        proc_info->size = 512;
+    }
+
+    for (i = 0; i < 4096; i++)
+    { /* MAGIC COOKIE WARNING  POWER8 default install can have 2655 processes */
+        size = fread(proc_info->buf, 1, proc_info->size - 1, proc_info->fp);
+        if (size < proc_info->size - 1)
+            break;
+        proc_info->size += 512;
+        proc_info->buf = REALLOC(proc_info->buf, proc_info->size);
+        rewind(proc_info->fp);
+    }
+
+    proc_info->buf[size] = 0;
+    proc_info->lines = 0;
+    proc_info->line[0] = &proc_info->buf[0];
+    if (num == P_VERSION)
+    {
+        found = 0;
+        for (i = 0; i < size; i++)
+        { /* remove some weird stuff found the hard way in various Linux versions and device drivers */
+            /* place ") (" on two lines */
+            if (found == 0 &&
+                proc_info->buf[i] == ')' &&
+                proc_info->buf[i + 1] == ' ' &&
+                proc_info->buf[i + 2] == '(')
+            {
+                proc_info->buf[i + 1] = '\n';
+                found = 1;
+            }
+            else
+            {
+                /* place ") #" on two lines */
+                if (proc_info->buf[i] == ')' &&
+                    proc_info->buf[i + 1] == ' ' &&
+                    proc_info->buf[i + 2] == '#')
+                {
+                    proc_info->buf[i + 1] = '\n';
+                }
+                /* place "#1" on two lines */
+                if (proc_info->buf[i] == '#' && proc_info->buf[i + 2] == '1')
+                {
+                    proc_info->buf[i] = '\n';
+                }
+            }
+        }
+    }
+    for (i = 0; i < size; i++)
+    {
+        /* replace Tab characters with space */
+        if (proc_info->buf[i] == '\t')
+        {
+            proc_info->buf[i] = ' ';
+        }
+        else if (proc_info->buf[i] == '\n')
+        {
+            /* replace newline characters with null */
+            proc_info->lines++;
+            proc_info->buf[i] = '\0';
+            proc_info->line[proc_info->lines] = &proc_info->buf[i + 1];
+        }
+        if (proc_info->lines == PROC_MAXLINES - 1)
+            break;
+    }
+    if (reread)
+    {
+        fclose(proc_info->fp);
+        proc_info->fp = 0;
+    }
+    /* Set flag so we do not re-read the data even if called multiple times in same interval */
+    proc_info->read_this_interval = 1;
+}
+
+int get_cpu_cnt(struct nmon_proc *proc_info)
+{
+    int i, cpus = 0;
+
+    /* Get CPU info from /proc/stat and populate proc[P_STAT] */
+    proc_read(proc_info, P_STAT, 0);
+
+    /* Start with index [1] as [0] contains overall CPU statistics */
+    for (i = 1; i < proc_info->lines; i++)
+    {
+        if (strncmp("cpu", proc_info->line[i], 3) == 0)
+            cpus = i;
+        else
+            break;
+    }
+    if (cpus >= VMP_CPUMAX)
+    {
+        printf("This nmon supports only %d CPU threads (Logical CPUs) and the machine appears to have %d.\nnmon stopping as its unsafe to continue.\n",
+               VMP_CPUMAX, cpus);
+        exit(44);
+    }
+    return cpus;
+}
+
+void proc_cpu(struct nmon_proc *proc_info, int cpu_num, struct cpu_stat *cpu_total, struct cpu_stat *cpuN)
+{
+    int i;
+    int row;
+    static int intr_line = 0;
+    static int ctxt_line = 0;
+    static int btime_line = 0;
+    static int proc_line = 0;
+    static int run_line = 0;
+    static int block_line = 0;
+    static int proc_cpu_first_time = 1;
+    long long user;
+    long long nice;
+    long long sys;
+    long long idle;
+    long long iowait;
+    long long hardirq;
+    long long softirq;
+    long long steal;
+    long long guest;
+    long long guest_nice;
+
+    static int stat8 = 0;
+    static int stat10 = 0;
+
+    static int old_cpus = 1;
+    int cpus = cpu_num;
+
+    /* Only read data once per interval */
+    if (proc_cpu_done == 1)
+        return;
+
+    /* If number of CPUs changed, then we need to find the index of intr_line, ... again */
+    if (old_cpus != cpus)
+        intr_line = 0;
+
+    if (proc_cpu_first_time)
+    {
+        stat8 =
+            sscanf(&proc_info->line[0][5],
+                   "%lld %lld %lld %lld %lld %lld %lld %lld", &user, &nice,
+                   &sys, &idle, &iowait, &hardirq, &softirq, &steal);
+        stat10 =
+            sscanf(&proc_info->line[0][5],
+                   "%lld %lld %lld %lld %lld %lld %lld %lld %lld %lld",
+                   &user, &nice, &sys, &idle, &iowait, &hardirq, &softirq,
+                   &steal, &guest, &guest_nice);
+        proc_cpu_first_time = 0;
+    }
+    user = nice = sys = idle = iowait = hardirq = softirq = steal = guest = guest_nice = 0;
+    if (stat10 == 10)
+    {
+        sscanf(&proc_info->line[0][5],
+               "%lld %lld %lld %lld %lld %lld %lld %lld %lld %lld", &user,
+               &nice, &sys, &idle, &iowait, &hardirq, &softirq, &steal,
+               &guest, &guest_nice);
+    }
+    else
+    {
+        if (stat8 == 8) {
+            sscanf(&proc_info->line[0][5],
+                   "%lld %lld %lld %lld %lld %lld %lld %lld", &user, &nice,
+                   &sys, &idle, &iowait, &hardirq, &softirq, &steal);
+        } else { /* stat 4 variables here as older Linux proc */
+            sscanf(&proc_info->line[0][5], "%lld %lld %lld %lld",
+                   &user, &nice, &sys, &idle);
+        }
+    }
+    cpu_total->user = user;
+    cpu_total->nice = nice;
+    cpu_total->idle = idle;
+    cpu_total->sys = sys;
+    cpu_total->wait = iowait; /* in the case of 4 variables = 0 */
+    /* cpu_total->sys  = sys + hardirq + softirq + steal; */
+
+    cpu_total->irq = hardirq;
+    cpu_total->softirq = softirq;
+    cpu_total->steal = steal;
+    cpu_total->guest = guest;
+    cpu_total->guest_nice = guest_nice;
+
+#ifdef _DEBUG
+    //if (debug)
+    fprintf(stderr, "XX user=%lld wait=%lld sys=%lld idle=%lld\n",
+            cpu_total->user, cpu_total->wait, cpu_total->sys, cpu_total->idle);
+    fprintf(stderr, "XX stat8=%d, stat10=%d\n", stat8, stat10);
+#endif /*DEBUG*/
+
+    for (i = 0; i < cpus; i++)
+    {
+        user = nice = sys = idle = iowait = hardirq = softirq = steal = 0;
+
+        /* allow for large CPU numbers */
+        if (i + 1 > 1000)
+            row = 8;
+        else if (i + 1 > 100)
+            row = 7;
+        else if (i + 1 > 10)
+            row = 6;
+        else
+            row = 5;
+
+        if (stat10 == 10)
+        {
+            sscanf(&proc_info->line[i + 1][row],
+                   "%lld %lld %lld %lld %lld %lld %lld %lld %lld %lld",
+                   &user,
+                   &nice,
+                   &sys,
+                   &idle,
+                   &iowait,
+                   &hardirq, &softirq, &steal, &guest, &guest_nice);
+        }
+        else if (stat8 == 8)
+        {
+            sscanf(&proc_info->line[i + 1][row],
+                   "%lld %lld %lld %lld %lld %lld %lld %lld",
+                   &user,
+                   &nice,
+                   &sys, &idle, &iowait, &hardirq, &softirq, &steal);
+        }
+        else
+        {
+            sscanf(&proc_info->line[i + 1][row], "%lld %lld %lld %lld",
+                   &user, &nice, &sys, &idle);
+        }
+        cpuN[i].user = user;
+        cpuN[i].nice = nice;
+        cpuN[i].sys = sys;
+        cpuN[i].idle = idle;
+        cpuN[i].wait = iowait;
+        cpuN[i].irq = hardirq;
+        cpuN[i].softirq = softirq;
+        cpuN[i].steal = steal;
+        cpuN[i].guest = guest;
+        cpuN[i].guest_nice = guest_nice;
+    }
+
+    if (intr_line == 0)
+    {
+        if (proc_info->line[i + 1][0] == 'p' &&
+            proc_info->line[i + 1][1] == 'a' &&
+            proc_info->line[i + 1][2] == 'g' &&
+            proc_info->line[i + 1][3] == 'e')
+        {
+            /* 2.4 kernel */
+            intr_line = i + 3;
+            ctxt_line = i + 5;
+            btime_line = i + 6;
+            proc_line = i + 7;
+            run_line = i + 8;
+            block_line = i + 9;
+        }
+        else
+        {
+            /* 2.6 kernel */
+            intr_line = i + 1;
+            ctxt_line = i + 2;
+            btime_line = i + 3;
+            proc_line = i + 4;
+            run_line = i + 5;
+            block_line = i + 6;
+        }
+    }
+    cpu_total->intr = -1;
+    cpu_total->ctxt = -1;
+    cpu_total->procs = -1;
+    cpu_total->running = -1;
+    cpu_total->blocked = -1;
+    if (proc_info->lines >= intr_line)
+        sscanf(&proc_info->line[intr_line][0], "intr %lld", &cpu_total->intr);
+    if (proc_info->lines >= ctxt_line)
+        sscanf(&proc_info->line[ctxt_line][0], "ctxt %lld", &cpu_total->ctxt);
+    // if(boottime == 0) {
+    // struct tm ts;
+    // if (proc_info->lines >= btime_line)
+    // sscanf(&proc_info->line[btime_line][0], "btime %lld", &boottime);
+    // ts = *localtime((time_t *)&boottime);
+    // strftime (boottime_str, 64, "%I:%M %p %d-%b-%Y", &ts);
+    // }
+    if (proc_info->lines >= proc_line)
+        sscanf(&proc_info->line[proc_line][0], "processes %lld", &cpu_total->procs);
+    if (proc_info->lines >= run_line)
+        sscanf(&proc_info->line[run_line][0], "procs_running %lld", &cpu_total->running);
+    if (proc_info->lines >= block_line)
+        sscanf(&proc_info->line[block_line][0], "procs_blocked %lld", &cpu_total->blocked);
+
+    /* If we had a change in the number of CPUs, copy current interval data to the previous, so we
+     * get a "0" utilization interval, but better than negative or 100%.
+     * Heads-up - This effects POWER SMT changes too.
+     */
+    if (old_cpus != cpus)
+    {
+        printf("old_cpus != cpus\n");
+        // memcpy((void *)&(q->cpu_total), (void *)&(p->cpu_total), sizeof(struct cpu_stat));
+        // memcpy((void *)q->cpuN, (void *)cpuN, sizeof(struct cpu_stat) * cpus);
+    }
+
+    old_cpus = cpus;
+
+    /* Flag that we processed /proc/stat data; re-set in proc_read() when we re-read /proc/stat */
+    proc_cpu_done = 1;
 }
