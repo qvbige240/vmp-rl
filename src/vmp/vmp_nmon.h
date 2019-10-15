@@ -59,6 +59,36 @@ struct cpu_stat {		/* changed the order here to match this years kernel (man 5 /
     float mins15;
 };
 
+struct mem_stat {
+    long memtotal;
+    long memfree;
+    long memshared;
+    long buffers;
+    long cached;
+    long swapcached;
+    long active;
+    long inactive;
+    long hightotal;
+    long highfree;
+    long lowtotal;
+    long lowfree;
+    long swaptotal;
+    long swapfree;
+#ifdef LARGEMEM
+    long dirty;
+    long writeback;
+    long mapped;
+    long slab;
+    long committed_as;
+    long pagetables;
+    long hugetotal;
+    long hugefree;
+    long hugesize;
+#else
+    long bigfree;
+#endif /*LARGEMEM*/
+};
+
 #define P_CPUINFO	    0
 #define P_STAT		    1
 #define P_VERSION	    2
@@ -93,6 +123,9 @@ void proc_init(struct nmon_proc *proc_info);
 void proc_read(struct nmon_proc *proc_info, int num, int reread);
 int get_cpu_cnt(struct nmon_proc *proc_info);
 void proc_cpu(struct nmon_proc *proc_info, int cpu_num, struct cpu_stat *cpu_total, struct cpu_stat *cpuN);
+
+/* memory */
+void vmp_proc_mem(struct nmon_proc *proc_info, struct mem_stat *mem);
 
 #ifdef __cplusplus
 }

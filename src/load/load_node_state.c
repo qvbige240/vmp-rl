@@ -47,13 +47,14 @@ static int sc_node_state_func(void *p, void *req, void *rsp)
     //VMP_LOGD("req id = %d\n", request->id);
 
     vmon_connection_t c = load_child_connection_get(thiz->req.process);
+    long memtotal = ls_mem_total_get(thiz->system);
 
     response->index = 0;
     response->name = "server local";
     response->count = c.number;
     response->uplink = ls_uplink_get(thiz->system);
     response->downlink = ls_downlink_get(thiz->system);;
-    response->memory = 1024;
+    response->memory = memtotal - ls_mem_free_get(thiz->system);
     response->cpu = ls_cpu_get(thiz->system);
 
     return 0;

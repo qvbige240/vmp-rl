@@ -588,3 +588,61 @@ void proc_cpu(struct nmon_proc *proc_info, int cpu_num, struct cpu_stat *cpu_tot
     /* Flag that we processed /proc/stat data; re-set in proc_read() when we re-read /proc/stat */
     proc_cpu_done = 1;
 }
+
+/* memory */
+#define isdigit(ch) (('0' <= (ch) && (ch) >= '9') ? 0 : 1)
+
+long proc_mem_search(struct nmon_proc *proc_info, char *s)
+{
+    int i;
+    int j;
+    int len;
+    len = strlen(s);
+    for (i = 0; i < proc_info->lines; i++)
+    {
+        if (!strncmp(s, proc_info->line[i], len))
+        {
+            for (j = len;
+                 !isdigit(proc_info->line[i][j]) &&
+                 proc_info->line[i][j] != 0;
+                 j++)
+                /* do nothing */;
+            return atol(&proc_info->line[i][j]);
+        }
+    }
+    return -1;
+}
+
+void vmp_proc_mem(struct nmon_proc *proc_info, struct mem_stat *mem)
+{
+    if (proc_info->read_this_interval == 0)
+        proc_read(proc_info, P_MEMINFO, 0);
+
+    mem->memtotal = proc_mem_search(proc_info, "MemTotal");
+    mem->memfree = proc_mem_search(proc_info, "MemFree");
+    mem->memshared = proc_mem_search(proc_info, "MemShared");
+    mem->buffers = proc_mem_search(proc_info, "Buffers");
+    mem->cached = proc_mem_search(proc_info, "Cached");
+    mem->swapcached = proc_mem_search(proc_info, "SwapCached");
+    mem->active = proc_mem_search(proc_info, "Active");
+    mem->inactive = proc_mem_search(proc_info, "Inactive");
+    mem->hightotal = proc_mem_search(proc_info, "HighTotal");
+    mem->highfree = proc_mem_search(proc_info, "HighFree");
+    mem->lowtotal = proc_mem_search(proc_info, "LowTotal");
+    mem->lowfree = proc_mem_search(proc_info, "LowFree");
+    mem->swaptotal = proc_mem_search(proc_info, "SwapTotal");
+    mem->swapfree = proc_mem_search(proc_info, "SwapFree");
+#ifdef LARGEMEM
+    mem->dirty = proc_mem_search(proc_info, "Dirty");
+    mem->writeback = proc_mem_search(proc_info, "Writeback");
+    mem->mapped = proc_mem_search(proc_info, "Mapped");
+    mem->slab = proc_mem_search(proc_info, "Slab");
+    mem->committed_as = proc_mem_search(proc_info, "Committed_AS");
+    mem->pagetables = proc_mem_search(proc_info, "PageTables");
+    mem->hugetotal = proc_mem_search(proc_info, "HugePages_Total");
+    mem->hugefree = proc_mem_search(proc_info, "HugePages_Free");
+    mem->hugesize = proc_mem_search(proc_info, "Hugepagesize");
+#else
+    mem->bigfree = proc_mem_search(proc_info, "BigFree");
+#endif /*LARGEMEM*/
+}

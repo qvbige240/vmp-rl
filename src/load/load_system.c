@@ -22,7 +22,7 @@ typedef struct system_data {
     // struct dsk_stat *dk;
     struct cpu_stat cpu_total;
     struct cpu_stat cpuN[VMP_CPUMAX];
-    // struct mem_stat mem;
+    struct mem_stat mem;
     // struct vm_stat vm;
     // struct nfs_stat nfs;
     struct net_stat ifnets[VMP_NETMAX];
@@ -45,6 +45,9 @@ typedef struct _PrivInfo
     volatile double         downlink;
 
     volatile double         cpu_idle;
+
+    volatile long           mem_total;
+    volatile long           mem_free;
 
     int                     cond;
 
@@ -83,6 +86,20 @@ double ls_cpu_get(void *p)
     if (!thiz) return 0.0;
 
     return 100.0 - thiz->cpu_idle;
+}
+long ls_mem_total_get(void *p)
+{
+    PrivInfo *thiz = p;
+    if (!thiz) return 0;
+
+    return thiz->mem_total;
+}
+long ls_mem_free_get(void *p)
+{
+    PrivInfo *thiz = p;
+    if (!thiz) return 0;
+
+    return thiz->mem_free;
 }
 
 static void load_system_test(PrivInfo *thiz)
@@ -181,6 +198,11 @@ static void system_net_proc(PrivInfo *thiz)
     memcpy((void *)&(q->cpu_total), (void *)&(p->cpu_total), sizeof(struct cpu_stat));
     memcpy((void *)q->cpuN, (void *)p->cpuN, sizeof(struct cpu_stat) * cpus);
 
+    /* memory */
+    struct nmon_proc *info_mem = &proc[P_MEMINFO];
+    vmp_proc_mem(info_mem, &p->mem);
+    memcpy(&q->mem, &p->mem, sizeof(struct mem_stat));
+
     thiz->interval = 1;
     sleep(1);
 
@@ -221,7 +243,6 @@ static void system_net_proc(PrivInfo *thiz)
         cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait + cpu_steal;
 
         //IFSTAT_PRINT("cpu_sum %7.1f\n", cpu_sum);
-
         IFSTAT_PRINT("%7.1f  %7.1f  %7.1f  %7.1f   %7.1f\n",
                      (double)cpu_user / (double)cpu_sum * 100.0,
                      (double)cpu_sys / (double)cpu_sum * 100.0,
@@ -230,6 +251,12 @@ static void system_net_proc(PrivInfo *thiz)
                      (double)cpu_steal / (double)cpu_sum * 100.0);
 
         thiz->cpu_idle = (double)cpu_idle / (double)cpu_sum * 100.0;
+
+        /* memory */
+        vmp_proc_mem(info_mem, &p->mem);
+        thiz->mem_total = p->mem.memtotal;
+        thiz->mem_free = p->mem.memfree;
+        IFSTAT_PRINT("Mem Total: %ld, Free: %ld\n", p->mem.memtotal, p->mem.memfree);
 
         // memcpy(q->ifnets, p->ifnets, sizeof(struct net_stat) * networks);
         // prev_time = curr_time;

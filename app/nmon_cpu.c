@@ -39,11 +39,41 @@ struct cpu_stat {		/* changed the order here to match this years kernel (man 5 /
     float mins15;
 };
 
+struct mem_stat {
+    long memtotal;
+    long memfree;
+    long memshared;
+    long buffers;
+    long cached;
+    long swapcached;
+    long active;
+    long inactive;
+    long hightotal;
+    long highfree;
+    long lowtotal;
+    long lowfree;
+    long swaptotal;
+    long swapfree;
+#ifdef LARGEMEM
+    long dirty;
+    long writeback;
+    long mapped;
+    long slab;
+    long committed_as;
+    long pagetables;
+    long hugetotal;
+    long hugefree;
+    long hugesize;
+#else
+    long bigfree;
+#endif /*LARGEMEM*/
+};
+
 struct data {
     // struct dsk_stat *dk;
     struct cpu_stat cpu_total;
     struct cpu_stat cpuN[CPUMAX];
-    // struct mem_stat mem;
+    struct mem_stat mem;
     struct timeval tv;
      double time;
 } database[2], *p, *q;
@@ -369,6 +399,60 @@ void proc_cpu()
     proc_cpu_done = 1;
 }
 
+//#define isdigit(ch) ( ( '0' <= (ch)  &&  (ch) >= '9')? 0: 1 )
+
+long proc_mem_search(char *s)
+{
+    int i;
+    int j;
+    int len;
+    len = strlen(s);
+    for (i = 0; i < proc[P_MEMINFO].lines; i++) {
+	if (!strncmp(s, proc[P_MEMINFO].line[i], len)) {
+	    for (j = len;
+		 !isdigit(proc[P_MEMINFO].line[i][j]) &&
+		 proc[P_MEMINFO].line[i][j] != 0; j++)
+		/* do nothing */ ;
+	    return atol(&proc[P_MEMINFO].line[i][j]);
+	}
+    }
+    return -1;
+}
+
+void proc_mem()
+{
+    if (proc[P_MEMINFO].read_this_interval == 0)
+	proc_read(P_MEMINFO, 0);
+
+    p->mem.memtotal = proc_mem_search("MemTotal");
+    p->mem.memfree = proc_mem_search("MemFree");
+    p->mem.memshared = proc_mem_search("MemShared");
+    p->mem.buffers = proc_mem_search("Buffers");
+    p->mem.cached = proc_mem_search("Cached");
+    p->mem.swapcached = proc_mem_search("SwapCached");
+    p->mem.active = proc_mem_search("Active");
+    p->mem.inactive = proc_mem_search("Inactive");
+    p->mem.hightotal = proc_mem_search("HighTotal");
+    p->mem.highfree = proc_mem_search("HighFree");
+    p->mem.lowtotal = proc_mem_search("LowTotal");
+    p->mem.lowfree = proc_mem_search("LowFree");
+    p->mem.swaptotal = proc_mem_search("SwapTotal");
+    p->mem.swapfree = proc_mem_search("SwapFree");
+#ifdef LARGEMEM
+    p->mem.dirty = proc_mem_search("Dirty");
+    p->mem.writeback = proc_mem_search("Writeback");
+    p->mem.mapped = proc_mem_search("Mapped");
+    p->mem.slab = proc_mem_search("Slab");
+    p->mem.committed_as = proc_mem_search("Committed_AS");
+    p->mem.pagetables = proc_mem_search("PageTables");
+    p->mem.hugetotal = proc_mem_search("HugePages_Total");
+    p->mem.hugefree = proc_mem_search("HugePages_Free");
+    p->mem.hugesize = proc_mem_search("Hugepagesize");
+#else
+    p->mem.bigfree = proc_mem_search("BigFree");
+#endif /*LARGEMEM*/
+}
+
 /* Convert secs + micro secs to a double */
 double doubletime(void)
 {
@@ -404,9 +488,12 @@ int main(int argc, char **argv)
     q->time = doubletime();
 
     proc_init();
-	    proc_read(P_STAT, 0);
-	    proc_cpu();
-        memcpy(&q->cpu_total, &p->cpu_total, sizeof(struct cpu_stat));
+    proc_read(P_STAT, 0);
+    proc_cpu();
+    memcpy(&q->cpu_total, &p->cpu_total, sizeof(struct cpu_stat));
+
+    proc_mem();
+    memcpy(&q->mem, &p->mem, sizeof(struct mem_stat));
 
     // int networks = proc_net(0);
     // memcpy(q->ifnets, p->ifnets, sizeof(struct net_stat) * networks);
@@ -466,8 +553,13 @@ int main(int argc, char **argv)
 		      (double) cpu_idle / (double) cpu_sum * 100.0,
 		      (double) cpu_steal / (double) cpu_sum * 100.0 );
 
+        proc_mem();
+        //printf("Mem Total: %ld, Free: %ld\n", p->mem.memtotal / 1024, p->mem.memfree / 1024);
+        printf("Mem Total: %ld, Free: %ld\n", p->mem.memtotal, p->mem.memfree);
+
         //memcpy(q->ifnets, p->ifnets, sizeof(struct net_stat) * networks);
         memcpy(&q->cpu_total, &p->cpu_total, sizeof(struct cpu_stat));
+        memcpy(&q->mem, &p->mem, sizeof(struct mem_stat));
         q->time = doubletime();
 
     /* Reset flags so /proc/... is re-read in next interval */

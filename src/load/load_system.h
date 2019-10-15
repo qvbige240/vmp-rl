@@ -33,6 +33,8 @@ int load_system_interval_set(void *p, int interval);
 double ls_uplink_get(void *p);
 double ls_downlink_get(void *p);
 double ls_cpu_get(void *p);
+long ls_mem_total_get(void *p);
+long ls_mem_free_get(void *p);
 
 VMP_END_DELS
 
