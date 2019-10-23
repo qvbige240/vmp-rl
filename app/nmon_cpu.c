@@ -557,6 +557,17 @@ int main(int argc, char **argv)
         //printf("Mem Total: %ld, Free: %ld\n", p->mem.memtotal / 1024, p->mem.memfree / 1024);
         printf("Mem Total: %ld, Free: %ld\n", p->mem.memtotal, p->mem.memfree);
 
+        char *model_ptr = "not-set";
+        proc_read(P_CPUINFO, 0);
+        for (i = 0; i < proc[P_CPUINFO].lines; i++)
+        {
+            if (strncmp("model name", proc[P_CPUINFO].line[i], 10) == 0)
+            {
+                model_ptr = &proc[P_CPUINFO].line[i][13];
+            }
+        }
+        printf("model name: %s\n", model_ptr);
+
         //memcpy(q->ifnets, p->ifnets, sizeof(struct net_stat) * networks);
         memcpy(&q->cpu_total, &p->cpu_total, sizeof(struct cpu_stat));
         memcpy(&q->mem, &p->mem, sizeof(struct mem_stat));
